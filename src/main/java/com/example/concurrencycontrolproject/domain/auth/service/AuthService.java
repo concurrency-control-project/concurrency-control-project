@@ -1,12 +1,18 @@
 package com.example.concurrencycontrolproject.domain.auth.service;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.concurrencycontrolproject.config.JwtUtil;
 import com.example.concurrencycontrolproject.domain.auth.dto.SignupResponse;
+import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
+import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.exception.AlreadyExistsEmailException;
+import com.example.concurrencycontrolproject.domain.user.exception.EmailAccessDeniedException;
 import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFoundException;
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
@@ -22,6 +28,7 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final JwtUtil jwtUtil;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	public SignupResponse signup(String email, String password, String nickname, String phoneNumber) {
 		if (userRepository.existsByEmail(email)) {
@@ -29,14 +36,19 @@ public class AuthService {
 		}
 
 		String encodedPassword = bCryptPasswordEncoder.encode(password);
-		User newUser = new User(email, encodedPassword, nickname, phoneNumber);
-		userRepository.save(newUser);
+		User User = new User(email, encodedPassword, nickname, phoneNumber);
+		User saveUser = userRepository.save(User);
 
-		return SignupResponse.from(newUser);
+		return SignupResponse.from(saveUser);
 	}
 
 	public void signin(String email, String password, HttpServletResponse servletResponse) {
 		User user = userRepository.findByEmail(email).orElseThrow(EmailNotFoundException::new);
+		Optional.ofNullable(user.getDeletedAt())
+			.filter(Objects::nonNull)
+			.ifPresent(deletedAt -> {
+				throw new EmailAccessDeniedException();
+			});
 
 		if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
 			throw new InvalidPasswordException();
@@ -50,6 +62,8 @@ public class AuthService {
 		servletResponse.setHeader("Authorization", accessToken);
 		// 쿠키에 리프레시토큰 저장
 		setTokenToCookie(refreshToken, servletResponse);
+		RefreshToken jwt = new RefreshToken(String.valueOf(user.getId()), refreshToken);
+		refreshTokenRepository.save(jwt);
 	}
 
 	private void setTokenToCookie(String bearerToken, HttpServletResponse servletResponse) {
