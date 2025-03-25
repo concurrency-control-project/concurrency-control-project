@@ -53,8 +53,8 @@ public class TicketController {
 	public ResponseEntity<Page<TicketResponseDto>> getTickets(
 		// @Auth AuthUser authUser,
 		@RequestParam("userId") Long userId, // 임시
-		@PageableDefault(page = 1, size = 10, sort = "modifiedAt", direction = DESC) Pageable pageable,
-		@RequestParam(required = false) Long concertId,
+		@PageableDefault(page = 1, size = 10, sort = "createdAt", direction = DESC) Pageable pageable,
+		@RequestParam(required = false) Long scheduleId,
 		@RequestParam(required = false) String scheduleStatus,
 		@RequestParam(required = false) String ticketStatus,
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime startedAt,
@@ -62,7 +62,8 @@ public class TicketController {
 	) {
 
 		return ResponseEntity.ok(
-			ticketService.getTickets(userId, pageable, concertId, scheduleStatus, ticketStatus, startedAt, endedAt));
+			ticketService.getTickets(userId, pageable, scheduleId, scheduleStatus, ticketStatus, startedAt,
+				endedAt));
 	}
 
 	// 티켓 취소(환불)
