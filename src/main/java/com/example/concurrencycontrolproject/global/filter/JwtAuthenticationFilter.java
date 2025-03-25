@@ -1,12 +1,16 @@
 package com.example.concurrencycontrolproject.config;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.concurrencycontrolproject.domain.common.dto.AuthUser;
+import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
+import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 
 import io.jsonwebtoken.Claims;
@@ -15,6 +19,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -49,9 +55,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					setAuthentication(claims);
 				}
 
-				request.setAttribute("userId", Long.parseLong(claims.getSubject()));
+				Long id = Long.parseLong(claims.getSubject());
+				request.setAttribute("userId", id);
 				request.setAttribute("email", claims.get("email"));
 				request.setAttribute("userRole", claims.get("userRole"));
+
+				Optional<Cookie> token = Arrays.stream(request.getCookies())
+					.filter(cookie -> cookie.getName().equals("token"))
+					.findFirst()
+					.orElseThrow(re);
+				Optional<RefreshToken> byId = refreshTokenRepository.findById(String.valueOf(id));
 
 			} catch (SecurityException | MalformedJwtException e) {
 				log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
