@@ -6,9 +6,7 @@ import java.util.Optional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.concurrencycontrolproject.config.JwtUtil;
 import com.example.concurrencycontrolproject.domain.auth.dto.SignupResponse;
-import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
 import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.exception.AlreadyExistsEmailException;
@@ -16,8 +14,8 @@ import com.example.concurrencycontrolproject.domain.user.exception.EmailAccessDe
 import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFoundException;
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
+import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -54,22 +52,10 @@ public class AuthService {
 			throw new InvalidPasswordException();
 		}
 
-		String accessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole(),
-			user.getNickname());
-		String refreshToken = jwtUtil.createRefreshToken(user.getId());
-
-		// 헤더의 Authorization 엑세스토큰 저장
-		servletResponse.setHeader("Authorization", accessToken);
-		// 쿠키에 리프레시토큰 저장
-		setTokenToCookie(refreshToken, servletResponse);
-		RefreshToken jwt = new RefreshToken(String.valueOf(user.getId()), refreshToken);
-		refreshTokenRepository.save(jwt);
-	}
-
-	private void setTokenToCookie(String bearerToken, HttpServletResponse servletResponse) {
-		String token = jwtUtil.substringToken(bearerToken);
-		Cookie cookie = new Cookie("token", token);
-		cookie.setPath("/");
-		servletResponse.addCookie(cookie);
+		jwtUtil.saveAccessToken(
+			jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole(), user.getNickname()),
+			servletResponse);
+		jwtUtil.saveRefreshToken(
+			jwtUtil.createRefreshToken(user.getId()), String.valueOf(user.getId()), servletResponse);
 	}
 }

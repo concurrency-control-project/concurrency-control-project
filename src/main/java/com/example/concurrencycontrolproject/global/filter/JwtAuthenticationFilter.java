@@ -2,7 +2,6 @@ package com.example.concurrencycontrolproject.global.filter;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -10,6 +9,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.concurrencycontrolproject.domain.auth.exception.ExpiredJwtTokenException;
 import com.example.concurrencycontrolproject.domain.auth.exception.InvalidJwtSignatureException;
+import com.example.concurrencycontrolproject.domain.auth.exception.InvalidTokenException;
 import com.example.concurrencycontrolproject.domain.auth.exception.TokenNotFoundException;
 import com.example.concurrencycontrolproject.domain.auth.exception.UnsupportedJwtTokenException;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
@@ -20,7 +20,6 @@ import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
@@ -47,14 +46,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String authorizationHeader = request.getHeader("Authorization");
 
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-			String jwt = jwtUtil.substringToken(authorizationHeader);
+			String access = jwtUtil.substringToken(authorizationHeader);
+
+			String refresh = Arrays.stream(request.getCookies())
+				.filter(cookie -> cookie.getName().equals("token"))
+				.findFirst()
+				.map(Cookie::getValue)
+				.orElseThrow(TokenNotFoundException::new);
 
 			try {
-				Claims claims = jwtUtil.extractClaims(jwt);
+				Claims claims = jwtUtil.extractClaims(access);
 
 				if (claims == null) {
-					response.sendError(HttpServletResponse.SC_BAD_REQUEST, "잘못된 JWT 토큰입니다.");
-					return;
+					throw new InvalidTokenException();
 				}
 
 				if (SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -66,19 +70,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				request.setAttribute("email", claims.get("email"));
 				request.setAttribute("userRole", claims.get("userRole"));
 
-				Cookie refreshToken = Arrays.stream(request.getCookies())
-					.filter(cookie -> cookie.getName().equals("token"))
-					.findFirst()
-					.orElseThrow(TokenNotFoundException::new);
+				RefreshToken redis = refreshTokenRepository.findById(String.valueOf(id))
+					.orElseThrow(ExpiredJwtTokenException::new);
 
-				Optional<RefreshToken> authToken = refreshTokenRepository.findById(String.valueOf(id));
+				// jwt 토큰 만료 시간 검증
+				expiredJwtToken(access, refresh, redis.getToken(), response);
 
 			} catch (SecurityException | MalformedJwtException e) {
 				log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
 				throw new InvalidJwtSignatureException();
-			} catch (ExpiredJwtException e) {
-				log.error("Expired JWT token, 만료된 JWT token 입니다.", e);
-				throw new ExpiredJwtTokenException();
 			} catch (UnsupportedJwtException e) {
 				log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.", e);
 				throw new UnsupportedJwtTokenException();
@@ -100,5 +100,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(authUser);
 		SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 	}
+
+	private void expiredJwtToken(String accessToken, String refreshToken, String redisToken,
+		HttpServletResponse response) {
+		boolean isAccessTokenExpired = jwtUtil.isExpired(accessToken);
+		boolean isRefreshTokenExpired = jwtUtil.isExpired(refreshToken);
+
+		if (isAccessTokenExpired && isRefreshTokenExpired) {
+			log.error("Expired JWT token, 만료된 JWT token 입니다.");
+			throw new ExpiredJwtTokenException();
+
+			// access token 만료, refresh token 유효 -> redis에 저장된 토큰과 일치성 확인 후 재발급
+		} else if (isAccessTokenExpired) {
+			String newAccessToken = jwtUtil.validateExpiredAccessToken(refreshToken, redisToken);
+			jwtUtil.saveAccessToken(newAccessToken, response);
+
+			String userId = jwtUtil.extractClaims(newAccessToken).getSubject();
+			jwtUtil.reissueRefreshToken(userId, response);
+
+			// refresh token 만료, access token 유효 -> access 검증 후 refresh 재발급
+		} else if (isRefreshTokenExpired) {
+			String subject = jwtUtil.extractClaims(accessToken).getSubject();
+			jwtUtil.reissueRefreshToken(subject, response);
+		}
+	}
+
 }
 
