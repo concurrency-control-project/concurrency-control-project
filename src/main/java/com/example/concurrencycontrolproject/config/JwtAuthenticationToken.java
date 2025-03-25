@@ -2,7 +2,7 @@ package com.example.concurrencycontrolproject.config;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
-import AuthUser;
+import com.example.concurrencycontrolproject.domain.common.dto.AuthUser;
 
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 

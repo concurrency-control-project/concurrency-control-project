@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,8 +40,7 @@ public class SecurityConfig {
 			.logout(AbstractHttpConfigurer::disable)
 			.rememberMe(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers(request -> request.getRequestURI().startsWith("/auth")).permitAll()
-				.requestMatchers("/admin").authenticated()
+				.requestMatchers(new AntPathRequestMatcher("/api/*/auth/**")).permitAll()
 				.anyRequest().authenticated())
 			.build();
 	}
