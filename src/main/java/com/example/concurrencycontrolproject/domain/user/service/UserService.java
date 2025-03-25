@@ -1,5 +1,9 @@
 package com.example.concurrencycontrolproject.domain.user.service;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -7,6 +11,8 @@ import com.example.concurrencycontrolproject.domain.user.dto.MyPageResponse;
 import com.example.concurrencycontrolproject.domain.user.dto.UserResponse;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
+import com.example.concurrencycontrolproject.domain.user.exception.SamePasswordChangeException;
+import com.example.concurrencycontrolproject.domain.user.exception.UserAlreadyDeactivatedException;
 import com.example.concurrencycontrolproject.domain.user.exception.UserNotFoundException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 
@@ -17,15 +23,17 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final BCryptPasswordEncoder passwordEncoder;
 
 	public MyPageResponse getMyPage(Long id) {
-		User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+		User user = invalidCheckUser(id);
 		return MyPageResponse.from(user);
 	}
 
 	@Transactional
 	public UserResponse updateUser(Long id, String nickname, String phoneNumber) {
-		User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+		User user = invalidCheckUser(id);
+
 		if (!nickname.isBlank()) {
 			user.updateNickname(nickname);
 		}
@@ -39,14 +47,33 @@ public class UserService {
 
 	@Transactional
 	public void updatePassword(Long id, String oldPassword, String newPassword) {
-		User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+		User user = invalidCheckUser(id);
 		String userPassword = user.getPassword();
 
-		if (userPassword.equals(oldPassword)) {
+		if (!passwordEncoder.matches(oldPassword, userPassword)) {
 			throw new InvalidPasswordException();
 		}
+
+		if (passwordEncoder.matches(newPassword, userPassword)) {
+			throw new SamePasswordChangeException();
+		}
+
+		user.updatePassword(passwordEncoder.encode(newPassword));
 	}
 
+	@Transactional
 	public void deleteUser(Long id) {
+		invalidCheckUser(id).cancelUser();
+	}
+
+	private User invalidCheckUser(Long id) {
+		User user = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+		Optional.ofNullable(user.getDeletedAt())
+			.filter(Objects::nonNull)
+			.ifPresent(deletedAt -> {
+				throw new UserAlreadyDeactivatedException();
+			});
+
+		return user;
 	}
 }
