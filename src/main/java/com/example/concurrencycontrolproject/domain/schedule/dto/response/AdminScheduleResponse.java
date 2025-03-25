@@ -10,17 +10,19 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ScheduleResponse {
+public class AdminScheduleResponse {
 
 	private final Long id;
 	private final Long concertId;
+	private final String concertName;
 	private final LocalDateTime datetime;
 	private final ScheduleStatus status;
 
-	public static ScheduleResponse of(Schedule schedule) {
-		return new ScheduleResponse(
+	public static AdminScheduleResponse of(Schedule schedule) {
+		return new AdminScheduleResponse(
 			schedule.getId(),
 			schedule.getConcert().getId(),
+			schedule.getConcert().getTitle(),
 			schedule.getDatetime(),
 			schedule.getStatus()
 		)

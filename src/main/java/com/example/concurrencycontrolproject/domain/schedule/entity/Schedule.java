@@ -15,6 +15,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +30,7 @@ public class Schedule extends BaseTime {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManytoOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "concert_id", nullable = false)
 	private Concert concert;
 
@@ -52,5 +53,10 @@ public class Schedule extends BaseTime {
 
 	public void updateStatus(ScheduleStatus status) {
 		this.status = status;
+	}
+
+	public void deletedAt() {
+		this.deletedAt = LocalDateTime.now();
+		this.status = ScheduleStatus.DELETED;
 	}
 }
