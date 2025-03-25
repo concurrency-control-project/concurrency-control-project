@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.config;
+package com.example.concurrencycontrolproject.global.jwt;
 
 import java.security.Key;
 import java.util.Base64;
