@@ -10,19 +10,20 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ScheduleResponse {
+public class UserScheduleResponse {
 
 	private final Long id;
 	private final Long concertId;
+	private final String concertName;
 	private final LocalDateTime datetime;
-	private final ScheduleStatus status;
+	// 사용자에게는 ACTIVE 상태인 스케줄만 보이므로 Status 포함x
 
-	public static ScheduleResponse of(Schedule schedule) {
-		return new ScheduleResponse(
+	public static UserScheduleResponse of(Schedule schedule) {
+		return new UserScheduleResponse(
 			schedule.getId(),
 			schedule.getConcert().getId(),
-			schedule.getDatetime(),
-			schedule.getStatus()
+			schedule.getConcert().getTitle(),
+			schedule.getDatetime()
 		)
 	}
 }
