@@ -6,9 +6,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.concurrencycontrolproject.domain.common.dto.AuthUser;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 
-import AuthUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -33,12 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		ServletException,
 		IOException {
 		String authorizationHeader = request.getHeader("Authorization");
-		String url = request.getRequestURI();
-
-		if (url.startsWith("/auth")) {
-			filterChain.doFilter(request, response);
-			return;
-		}
 
 		if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 			String jwt = jwtUtil.substringToken(authorizationHeader);
@@ -55,22 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					setAuthentication(claims);
 				}
 
-				UserRole userRole = UserRole.valueOf(claims.get("userRole", String.class));
-
 				request.setAttribute("userId", Long.parseLong(claims.getSubject()));
 				request.setAttribute("email", claims.get("email"));
 				request.setAttribute("userRole", claims.get("userRole"));
-
-				if (url.startsWith("/admin")) {
-					// 관리자 권한이 없는 경우 403을 반환합니다.
-					if (!UserRole.Authority.ADMIN.equals(userRole.toString())) {
-						response.sendError(HttpServletResponse.SC_FORBIDDEN, "관리자 권한이 없습니다.");
-						return;
-					}
-
-					filterChain.doFilter(request, response);
-					return;
-				}
 
 			} catch (SecurityException | MalformedJwtException e) {
 				log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
