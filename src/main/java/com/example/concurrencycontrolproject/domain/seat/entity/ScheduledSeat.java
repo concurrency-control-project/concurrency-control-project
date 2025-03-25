@@ -11,19 +11,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "seat")
+@Table(name = "schedule_seat")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Seat {
+public class ScheduledSeat {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private Integer number;
-	private String grade;
-	private Integer price;
-	private String section;
+	private Long scheduleId;
+	private Long seatId;
+	private Boolean isAssigned;
 }
 
