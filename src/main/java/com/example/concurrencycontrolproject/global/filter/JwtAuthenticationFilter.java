@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.config;
+package com.example.concurrencycontrolproject.global.filter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -8,10 +8,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.concurrencycontrolproject.domain.common.dto.AuthUser;
+import com.example.concurrencycontrolproject.domain.auth.exception.ExpiredJwtTokenException;
+import com.example.concurrencycontrolproject.domain.auth.exception.InvalidJwtSignatureException;
+import com.example.concurrencycontrolproject.domain.auth.exception.TokenNotFoundException;
+import com.example.concurrencycontrolproject.domain.auth.exception.UnsupportedJwtTokenException;
+import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
 import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
+import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
+import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -60,27 +66,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				request.setAttribute("email", claims.get("email"));
 				request.setAttribute("userRole", claims.get("userRole"));
 
-				Optional<Cookie> token = Arrays.stream(request.getCookies())
+				Cookie refreshToken = Arrays.stream(request.getCookies())
 					.filter(cookie -> cookie.getName().equals("token"))
 					.findFirst()
-					.orElseThrow(re);
-				Optional<RefreshToken> byId = refreshTokenRepository.findById(String.valueOf(id));
+					.orElseThrow(TokenNotFoundException::new);
+
+				Optional<RefreshToken> authToken = refreshTokenRepository.findById(String.valueOf(id));
 
 			} catch (SecurityException | MalformedJwtException e) {
 				log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않는 JWT 서명입니다.");
+				throw new InvalidJwtSignatureException();
 			} catch (ExpiredJwtException e) {
 				log.error("Expired JWT token, 만료된 JWT token 입니다.", e);
-				response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "만료된 JWT 토큰입니다.");
+				throw new ExpiredJwtTokenException();
 			} catch (UnsupportedJwtException e) {
 				log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.", e);
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "지원되지 않는 JWT 토큰입니다.");
+				throw new UnsupportedJwtTokenException();
 			} catch (Exception e) {
 				log.error("Internal server error", e);
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-
 		filterChain.doFilter(request, response);
 	}
 
