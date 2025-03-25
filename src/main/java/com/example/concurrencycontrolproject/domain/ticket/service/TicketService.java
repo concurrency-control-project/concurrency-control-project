@@ -3,6 +3,7 @@ package com.example.concurrencycontrolproject.domain.ticket.service;
 import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -98,8 +99,17 @@ public class TicketService {
 	// 티켓 다건 조회
 	@Transactional(readOnly = true)
 	public Page<TicketResponseDto> getTickets(
-		Long userId, Pageable pageable, Long concertId, String scheduleStatus, String ticketStatus,
+		Long userId, Pageable pageable, Long scheduleId, String scheduleStatus, String ticketStatus,
 		LocalDateTime startedAt, LocalDateTime endedAt) {
+
+		Pageable convertPageable = PageRequest.of(
+			pageable.getPageNumber() - 1,
+			pageable.getPageSize(),
+			pageable.getSort()
+		);
+
+		return ticketRepository.findTickets(userId, convertPageable, scheduleId, scheduleStatus, ticketStatus,
+			startedAt, endedAt);
 
 	}
 }
