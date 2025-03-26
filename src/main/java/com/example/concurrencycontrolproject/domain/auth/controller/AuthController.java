@@ -1,7 +1,5 @@
 package com.example.concurrencycontrolproject.domain.auth.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +9,7 @@ import com.example.concurrencycontrolproject.domain.auth.dto.SigninRequest;
 import com.example.concurrencycontrolproject.domain.auth.dto.SignupRequest;
 import com.example.concurrencycontrolproject.domain.auth.dto.SignupResponse;
 import com.example.concurrencycontrolproject.domain.auth.service.AuthService;
+import com.example.concurrencycontrolproject.domain.common.response.Response;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -24,16 +23,16 @@ public class AuthController {
 	private final AuthService authService;
 
 	@PostMapping("/v1/auth/signup")
-	public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
+	public Response<SignupResponse> signup(@Valid @RequestBody SignupRequest signupRequest) {
 		SignupResponse signup = authService.signup(signupRequest.getEmail(), signupRequest.getPassword(),
 			signupRequest.getNickname(), signupRequest.getPhoneNumber());
-		return new ResponseEntity<>(signup, HttpStatus.CREATED);
+		return Response.of(signup);
 	}
 
 	@PostMapping("/v1/auth/signin")
-	public ResponseEntity<Void> signin(@Valid @RequestBody SigninRequest signinRequest,
+	public Response<Void> signin(@Valid @RequestBody SigninRequest signinRequest,
 		HttpServletResponse servletResponse) {
 		authService.signin(signinRequest.getEmail(), signinRequest.getPassword(), servletResponse);
-		return new ResponseEntity<>(HttpStatus.OK);
+		return Response.empty();
 	}
 }
