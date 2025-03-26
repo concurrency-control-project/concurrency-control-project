@@ -1,8 +1,10 @@
 package com.example.concurrencycontrolproject.domain.seat.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
+import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
 
-public interface ScheduledSeatRepository extends JpaRepository<Seat, Long> {
+@Repository
+public interface ScheduledSeatRepository extends CrudRepository<ScheduledSeat, String> {
 }
