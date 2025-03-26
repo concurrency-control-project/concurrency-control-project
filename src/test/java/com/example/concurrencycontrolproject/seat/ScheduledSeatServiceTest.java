@@ -17,7 +17,7 @@ import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
 import com.example.concurrencycontrolproject.domain.seat.repository.ScheduledSeatRepository;
 import com.example.concurrencycontrolproject.domain.seat.service.ScheduledSeatService;
 
-@ExtendWith(MockitoExtension.class) // Mockito 확장 사용
+@ExtendWith(MockitoExtension.class)
 public class ScheduledSeatServiceTest {
 
 	@Mock
@@ -38,7 +38,7 @@ public class ScheduledSeatServiceTest {
 	private final String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 
 	@Test
-	void 예약_성공_하면_Redis에_저장() {
+	void whenReservedSuccess_Redis_ReturnTrue() {
 		// given
 
 		when(redisTemplate.execute(eq(redisScript), anyList(), any()))
