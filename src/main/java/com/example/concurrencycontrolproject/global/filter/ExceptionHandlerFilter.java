@@ -1,7 +1,10 @@
 package com.example.concurrencycontrolproject.global.filter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.concurrencycontrolproject.domain.auth.exception.AuthException;
@@ -13,7 +16,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
+@Component
+@Slf4j
 public class ExceptionHandlerFilter extends OncePerRequestFilter {
 
 	@Override
@@ -22,21 +28,25 @@ public class ExceptionHandlerFilter extends OncePerRequestFilter {
 		try {
 			filterChain.doFilter(request, response);
 		} catch (AuthException e) {
+			log.error("Unexpected error occurred", e);
 			setErrorResponse(response, e.getErrorCode());
 		}
 	}
 
-	private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) {
+	private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		response.setStatus(errorCode.getHttpStatus().value());
-		response.setContentType("application/json; charset=UTF-8");
-		ErrorResponse errorResponse = ErrorResponse.of(errorCode.getCode(), errorCode.getDefaultMessage());
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.setCharacterEncoding("UTF-8");
 
-		try {
-			response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		ErrorResponse errorResponse = ErrorResponse.of(errorCode.getCode(), errorCode.getDefaultMessage());
+		String jsonError = objectMapper.writeValueAsString(errorResponse);
+
+		PrintWriter writer = response.getWriter();
+		writer.write(jsonError);
+		writer.flush();
+
+		log.error("Error Response: {}", jsonError);
 	}
 }

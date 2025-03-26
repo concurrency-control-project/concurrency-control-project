@@ -7,17 +7,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.example.concurrencycontrolproject.domain.auth.exception.AuthenticationExpiredException;
 import com.example.concurrencycontrolproject.domain.auth.exception.ExpiredJwtTokenException;
 import com.example.concurrencycontrolproject.domain.auth.exception.InvalidJwtSignatureException;
 import com.example.concurrencycontrolproject.domain.auth.exception.InvalidTokenException;
 import com.example.concurrencycontrolproject.domain.auth.exception.TokenNotFoundException;
 import com.example.concurrencycontrolproject.domain.auth.exception.UnsupportedJwtTokenException;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
-import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
-import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
+import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.MalformedJwtException;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
-	private final RefreshTokenRepository refreshTokenRepository;
+	private final RedisCacheUtil redisCache;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -70,11 +70,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				request.setAttribute("email", claims.get("email"));
 				request.setAttribute("userRole", claims.get("userRole"));
 
-				RefreshToken redis = refreshTokenRepository.findById(String.valueOf(id))
-					.orElseThrow(ExpiredJwtTokenException::new);
+				String redis = redisCache.getRefreshToken(String.valueOf(id));
 
 				// jwt 토큰 만료 시간 검증
-				expiredJwtToken(access, refresh, redis.getToken(), response);
+				expiredJwtToken(access, refresh, redis, response);
 
 			} catch (SecurityException | MalformedJwtException e) {
 				log.error("Invalid JWT signature, 유효하지 않는 JWT 서명 입니다.", e);
@@ -82,6 +81,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			} catch (UnsupportedJwtException e) {
 				log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.", e);
 				throw new UnsupportedJwtTokenException();
+			} catch (AuthenticationExpiredException e) {
+				log.error("JWT token Expired, JWT 토큰 시간이 만료 되었습니다.", e);
+				throw e;
 			} catch (Exception e) {
 				log.error("Internal server error", e);
 				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -103,8 +105,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private void expiredJwtToken(String accessToken, String refreshToken, String redisToken,
 		HttpServletResponse response) {
-		boolean isAccessTokenExpired = jwtUtil.isExpired(accessToken);
-		boolean isRefreshTokenExpired = jwtUtil.isExpired(refreshToken);
+		boolean isAccessTokenExpired = jwtUtil.isTokenExpired(accessToken);
+		boolean isRefreshTokenExpired = jwtUtil.isTokenExpired(refreshToken);
 
 		if (isAccessTokenExpired && isRefreshTokenExpired) {
 			log.error("Expired JWT token, 만료된 JWT token 입니다.");
@@ -113,17 +115,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			// access token 만료, refresh token 유효 -> redis에 저장된 토큰과 일치성 확인 후 재발급
 		} else if (isAccessTokenExpired) {
 			String newAccessToken = jwtUtil.validateExpiredAccessToken(refreshToken, redisToken);
-			jwtUtil.saveAccessToken(newAccessToken, response);
-
-			String userId = jwtUtil.extractClaims(newAccessToken).getSubject();
-			jwtUtil.reissueRefreshToken(userId, response);
+			jwtUtil.accessTokenSetHeader(newAccessToken, response);
+			jwtUtil.reissueRefreshToken(newAccessToken, response);
 
 			// refresh token 만료, access token 유효 -> access 검증 후 refresh 재발급
 		} else if (isRefreshTokenExpired) {
-			String subject = jwtUtil.extractClaims(accessToken).getSubject();
-			jwtUtil.reissueRefreshToken(subject, response);
+			jwtUtil.reissueRefreshToken(accessToken, response);
 		}
 	}
-
 }
 
