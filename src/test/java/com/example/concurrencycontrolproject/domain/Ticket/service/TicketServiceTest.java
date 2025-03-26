@@ -3,6 +3,8 @@ package com.example.concurrencycontrolproject.domain.Ticket.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,11 +13,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
+import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
 import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponseDto;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
@@ -88,7 +96,6 @@ public class TicketServiceTest {
 		ticketId = 1L;
 		ReflectionTestUtils.setField(mockTicket, "id", ticketId);
 		ReflectionTestUtils.setField(mockTicket, "scheduleSeat", mockScheduleSeat);
-		ReflectionTestUtils.setField(mockTicket, "status", TicketStatus.RESERVED);
 
 	}
 
@@ -152,5 +159,79 @@ public class TicketServiceTest {
 		assertEquals(mockSeat.getPrice(), ticketResponseDto.getSeat().getPrice());
 		assertEquals(mockSeat.getSection(), ticketResponseDto.getSeat().getSection());
 		assertEquals(mockSeat.getNumber(), ticketResponseDto.getSeat().getNumber());
+	}
+
+	@Test
+	void getTickets_성공_시_티켓_페이지를_반환한다() {
+
+		// given
+		String ticketStatus = TicketStatus.RESERVED.name();
+		LocalDateTime startedAt = LocalDateTime.of(2023, 1, 1, 0, 0);
+		LocalDateTime endedAt = LocalDateTime.of(2025, 12, 31, 23, 59);
+
+		Pageable pageable = PageRequest.of(
+			1,
+			10,
+			Sort.by("createdAt").descending());
+
+		Pageable convertPageable = PageRequest.of(
+			pageable.getPageNumber() - 1,
+			pageable.getPageSize(),
+			pageable.getSort()
+		);
+
+		when(userRepository.findById(userId))
+			.thenReturn(Optional.of(mockUser));
+
+		TicketResponseDto mockTicketResponseDto = TicketResponseDto.builder()
+			.id(1L)
+			.scheduleId(scheduleId)
+			.status(TicketStatus.RESERVED)
+			.createdAt(LocalDateTime.now())
+			.modifiedAt(LocalDateTime.now())
+			.seat(SeatResponseDto.builder()
+				.id(mockSeat.getId())
+				.number(mockSeat.getNumber())
+				.grade(mockSeat.getGrade())
+				.price(mockSeat.getPrice())
+				.section(mockSeat.getSection())
+				.build())
+			.build();
+
+		Page<TicketResponseDto> mockPage = new PageImpl<>(
+			List.of(mockTicketResponseDto),
+			PageRequest.of(0, 10, Sort.by("createdAt").descending()),
+			1);
+
+		when(ticketRepository.findTickets(eq(userId), eq(convertPageable), eq(scheduleId),
+			eq(ticketStatus), eq(startedAt), eq(endedAt))).thenReturn(mockPage);
+
+		// when
+		Page<TicketResponseDto> result = ticketService.getTickets(userId, pageable, scheduleId,
+			ticketStatus, startedAt, endedAt);
+
+		// then
+		assertNotNull(result);
+		assertEquals(1, result.getTotalElements());
+		assertEquals(mockTicketResponseDto.getId(), result.getContent().get(0).getId());
+	}
+
+	@Test
+	void deleteTicket_성공한다() {
+		// given
+		when(userRepository.findById(userId))
+			.thenReturn(Optional.of(mockUser));
+
+		mockScheduleSeat = org.mockito.Mockito.mock(ScheduleSeat.class);
+		mockTicket = Ticket.saveTicket(mockScheduleSeat);
+		when(ticketRepository.findById(ticketId))
+			.thenReturn(Optional.of(mockTicket));
+
+		// when
+		ticketService.deleteTicket(userId, ticketId);
+
+		// then
+		assertEquals(TicketStatus.CANCELED, mockTicket.getStatus());
+		verify(ticketRepository).save(eq(mockTicket));
 	}
 }
