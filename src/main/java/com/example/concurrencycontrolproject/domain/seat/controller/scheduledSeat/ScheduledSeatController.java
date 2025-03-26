@@ -9,42 +9,42 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.concurrencycontrolproject.domain.common.response.Response;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatRequest;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponse;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatRequestDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
 import com.example.concurrencycontrolproject.domain.seat.service.scheduledSeat.ScheduledSeatService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("./api/v1/scheduled-seats")
 @RequiredArgsConstructor
 public class ScheduledSeatController {
 	private final ScheduledSeatService scheduledSeatService;
 
 	// 좌석 예약 API
-	@PostMapping("/v1/scheduled-seats")
-	public ResponseEntity<Response<ScheduledSeatResponse>> reserveSeat(
-		@RequestBody ScheduledSeatRequest requestDTO) {
-		Response<ScheduledSeatResponse> response = scheduledSeatService.reserveSeat(requestDTO.getScheduleId(),
-			requestDTO.getSeatId(), 1L);
-		return ResponseEntity.ok(response);
+	@PostMapping("./api/v1/scheduledSeat/reserve")
+	public ResponseEntity<String> reserveSeat(@RequestBody ScheduledSeatRequestDTO requestDTO) {
+		scheduledSeatService.reserveSeat(requestDTO.getScheduleId(), requestDTO.getSeatId(), 1L);
+		return ResponseEntity.ok("Reserved Seat!");
 	}
 
 	// 예약 취소 API
-	@DeleteMapping("/v1/scheduled-seat/{scheduleId}/{seatId}")
-	public ResponseEntity<Response<ScheduledSeatResponse>> cancelReservation(
-		@PathVariable Long scheduleId, @PathVariable Long seatId) {
-		Response<ScheduledSeatResponse> response = scheduledSeatService.cancelReservation(scheduleId, seatId);
-		return ResponseEntity.ok(response);
+	@DeleteMapping("./api/v1/scheduledSeat/cancel")
+	public ResponseEntity<String> cancelReservation(@RequestBody ScheduledSeatRequestDTO requestDTO) {
+		scheduledSeatService.cancelReservation(requestDTO.getScheduleId(), requestDTO.getSeatId());
+		return ResponseEntity.ok("Reserved Seat Cancelled!");
 	}
 
 	// 예약 상태 조회 API
-	@GetMapping("/v1/scheduled-seats/{scheduleId}/{seatId}")
-	public ResponseEntity<Response<ScheduledSeatResponse>> getReservation(@PathVariable Long scheduleId,
+	@GetMapping("./api/v1/scheduledSeat/{scheduleId}/{seatId}")
+	public ResponseEntity<ScheduledSeatResponseDTO> getReservation(@PathVariable Long scheduleId,
 		@PathVariable Long seatId) {
-		Response<ScheduledSeatResponse> response = scheduledSeatService.getReservation(scheduleId, seatId);
-		return ResponseEntity.ok(response);
+		ScheduledSeat reservation = scheduledSeatService.getReservation(scheduleId, seatId);
+		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(
+			reservation.getId(), reservation.getScheduleId(), reservation.getSeatId(), reservation.getIsAssigned(),
+			reservation.getReservedBy());
+		return ResponseEntity.ok(responseDTO);
 	}
 }
 
