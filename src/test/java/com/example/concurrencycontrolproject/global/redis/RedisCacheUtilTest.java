@@ -36,6 +36,15 @@ class RedisCacheUtilTest {
 		refreshToken = new RefreshToken(userId, token);
 	}
 
+	RefreshToken refreshToken;
+	String token = "token";
+	String userId = "1";
+
+	@BeforeEach
+	void setUp() {
+		refreshToken = new RefreshToken(userId, token);
+	}
+
 	@Test
 	void saveRefreshToken() {
 		String save = redisCacheUtil.saveRefreshToken(token, userId);
