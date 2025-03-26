@@ -13,9 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
-import com.example.concurrencycontrolproject.domain.seat.repository.ScheduledSeatRepository;
-import com.example.concurrencycontrolproject.domain.seat.service.ScheduledSeatService;
+import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
+import com.example.concurrencycontrolproject.domain.seat.repository.scheduledSeat.ScheduledSeatRepository;
+import com.example.concurrencycontrolproject.domain.seat.service.scheduledSeat.ScheduledSeatService;
 
 @ExtendWith(MockitoExtension.class)
 public class ScheduledSeatServiceTest {

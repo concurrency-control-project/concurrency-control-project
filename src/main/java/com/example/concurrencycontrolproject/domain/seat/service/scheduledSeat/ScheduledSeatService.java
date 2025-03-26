@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.service;
+package com.example.concurrencycontrolproject.domain.seat.service.scheduledSeat;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,10 +7,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
-import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
-import com.example.concurrencycontrolproject.domain.seat.exception.ScheduledSeatErrorCode;
-import com.example.concurrencycontrolproject.domain.seat.exception.ScheduledSeatException;
-import com.example.concurrencycontrolproject.domain.seat.repository.ScheduledSeatRepository;
+import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
+import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatErrorCode;
+import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatException;
+import com.example.concurrencycontrolproject.domain.seat.repository.scheduledSeat.ScheduledSeatRepository;
 
 import lombok.RequiredArgsConstructor;
 

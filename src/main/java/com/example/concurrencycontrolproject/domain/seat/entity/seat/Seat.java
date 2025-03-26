@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.entity;
+package com.example.concurrencycontrolproject.domain.seat.entity.seat;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
