@@ -10,9 +10,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScheduledSeatResponseDTO {
-	private Long id;
+	private String id;
 	private Long scheduleId;
 	private Long seatId;
 	private Boolean isAssigned;
+	private Long reservedBy;
 }
 
