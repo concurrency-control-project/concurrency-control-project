@@ -1,6 +1,5 @@
 package com.example.concurrencycontrolproject.domain.seat.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,35 +23,27 @@ public class ScheduledSeatController {
 	private final ScheduledSeatService scheduledSeatService;
 
 	// 좌석 예약 API
-	@PostMapping("./api/v1/reserve")
+	@PostMapping("./api/v1/scheduledSeat/reserve")
 	public ResponseEntity<String> reserveSeat(@RequestBody ScheduledSeatRequestDTO requestDTO) {
-		boolean success = scheduledSeatService.reserveSeat(requestDTO.getScheduleId(), requestDTO.getSeatId(), 1L);
-		if (success) {
-			return ResponseEntity.ok("좌석 예약 성공!");
-		} else {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body("좌석 예약 실패!");
-		}
+		scheduledSeatService.reserveSeat(requestDTO.getScheduleId(), requestDTO.getSeatId(), 1L);
+		return ResponseEntity.ok("Reserved Seat!");
 	}
 
 	// 예약 취소 API
-	@DeleteMapping("./api/v1/cancel")
+	@DeleteMapping("./api/v1/scheduledSeat/cancel")
 	public ResponseEntity<String> cancelReservation(@RequestBody ScheduledSeatRequestDTO requestDTO) {
 		scheduledSeatService.cancelReservation(requestDTO.getScheduleId(), requestDTO.getSeatId());
-		return ResponseEntity.ok("좌석 예약 취소 완료!");
+		return ResponseEntity.ok("Reserved Seat Cancelled!");
 	}
 
 	// 예약 상태 조회 API
-	@GetMapping("./api/v1/{scheduleId}/{seatId}")
+	@GetMapping("./api/v1/scheduledSeat/{scheduleId}/{seatId}")
 	public ResponseEntity<ScheduledSeatResponseDTO> getReservation(@PathVariable Long scheduleId,
 		@PathVariable Long seatId) {
 		ScheduledSeat reservation = scheduledSeatService.getReservation(scheduleId, seatId);
-		if (reservation == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		}
 		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(
 			reservation.getId(), reservation.getScheduleId(), reservation.getSeatId(), reservation.getIsAssigned(),
-			reservation.getReservedBy()
-		);
+			reservation.getReservedBy());
 		return ResponseEntity.ok(responseDTO);
 	}
 }

@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "ScheduledSeat", timeToLive = 7200)  // TTL 2시간
+@RedisHash(value = "ScheduledSeat", timeToLive = 10800)  // TTL 3시간
 public class ScheduledSeat {
 	@Id
 	private String id;  // Redis에서는 ID를 String 타입으로 사용

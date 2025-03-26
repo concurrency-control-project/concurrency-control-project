@@ -16,7 +16,7 @@ import com.example.concurrencycontrolproject.domain.seat.service.SeatService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/seats")
+@RequestMapping("./api/v1/seats")
 @RequiredArgsConstructor
 public class SeatController {
 	private final SeatService seatService;
@@ -26,7 +26,7 @@ public class SeatController {
 		return ResponseEntity.ok(seatService.createSeat(requestDTO));
 	}
 
-	@GetMapping
+	@GetMapping("./api/v1/seats/getAll")
 	public ResponseEntity<List<SeatResponseDTO>> getAllSeats() {
 		return ResponseEntity.ok(seatService.getAllSeats());
 	}
