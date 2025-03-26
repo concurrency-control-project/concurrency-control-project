@@ -12,7 +12,6 @@ public interface TicketRepositoryCustom {
 		Long userId,
 		Pageable pageable,
 		Long scheduleId,
-		String scheduleStatus,
 		String ticketStatus,
 		LocalDateTime startedAt,
 		LocalDateTime endedAt
