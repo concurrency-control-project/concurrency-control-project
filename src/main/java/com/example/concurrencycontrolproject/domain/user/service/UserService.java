@@ -16,6 +16,7 @@ import com.example.concurrencycontrolproject.domain.user.exception.UserAlreadyDe
 import com.example.concurrencycontrolproject.domain.user.exception.UserNotFoundException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,10 +35,10 @@ public class UserService {
 	public UserResponse updateUser(Long id, String nickname, String phoneNumber) {
 		User user = invalidCheckUser(id);
 
-		if (!nickname.isBlank()) {
+		if (!StringUtils.isEmpty(nickname)) {
 			user.updateNickname(nickname);
 		}
-		if (!phoneNumber.isBlank()) {
+		if (!StringUtils.isEmpty(phoneNumber)) {
 			user.updatePhoneNumber(phoneNumber);
 		}
 
