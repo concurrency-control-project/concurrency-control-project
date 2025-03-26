@@ -31,7 +31,7 @@ public class UserController {
 		return Response.of(userService.getMyPage(authUser.getId()));
 	}
 
-	@PatchMapping("/v1/users")
+	@PatchMapping("/v1/users/my")
 	public Response<UserResponse> updateUser(@AuthenticationPrincipal AuthUser authUser,
 		@RequestBody UpdateUserRequest updateUserRequest) {
 		return Response.of(
@@ -39,7 +39,7 @@ public class UserController {
 				updateUserRequest.getPhoneNumber()));
 	}
 
-	@PatchMapping("/v1/users/password")
+	@PatchMapping("/v1/users/my/password")
 	public Response<Void> updatePassword(@AuthenticationPrincipal AuthUser authUser,
 		@Valid @RequestBody UpdatePasswordRequest updatePasswordRequest) {
 		userService.updatePassword(authUser.getId(), updatePasswordRequest.getOldPassword(),
@@ -47,7 +47,7 @@ public class UserController {
 		return Response.empty();
 	}
 
-	@DeleteMapping("/v1/users")
+	@DeleteMapping("/v1/users/my")
 	public Response<Void> deleteUser(@AuthenticationPrincipal AuthUser authUser) {
 		userService.deleteUser(authUser.getId());
 		return Response.empty();
