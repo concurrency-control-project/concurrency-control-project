@@ -1,11 +1,14 @@
 package com.example.concurrencycontrolproject.domain.ticket.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,6 +17,7 @@ import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.Schedule
 import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponseDto;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
+import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 import com.example.concurrencycontrolproject.domain.ticket.repository.TicketRepository;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 
@@ -99,17 +103,49 @@ public class TicketService {
 	// 티켓 다건 조회
 	@Transactional(readOnly = true)
 	public Page<TicketResponseDto> getTickets(
-		Long userId, Pageable pageable, Long scheduleId, String scheduleStatus, String ticketStatus,
+		Long userId, Pageable pageable, Long scheduleId, String ticketStatus,
 		LocalDateTime startedAt, LocalDateTime endedAt) {
 
+		// 유저 검증
+		findUser(userId);
+
+		// 페이지 -1
 		Pageable convertPageable = PageRequest.of(
 			pageable.getPageNumber() - 1,
 			pageable.getPageSize(),
 			pageable.getSort()
 		);
 
-		return ticketRepository.findTickets(userId, convertPageable, scheduleId, scheduleStatus, ticketStatus,
+		return ticketRepository.findTickets(userId, convertPageable, scheduleId, ticketStatus,
 			startedAt, endedAt);
 
+	}
+
+	// 티켓 취소
+	public void deleteTicket(Long userId, Long ticketId) {
+
+		// 유저 검증
+		findUser(userId);
+
+		// 티켓 검증
+		Ticket ticket = findTicket(ticketId);
+
+		// 티켓 삭제 (소프트 딜리트)
+		ticket.cancel();
+
+		// 삭제된 정보 DB에 저장
+		ticketRepository.save(ticket);
+	}
+
+	// 스케줄링 메서드
+	@Scheduled(cron = "0 * * * * *")
+	public void expireTicket() {
+		List<Ticket> tickets = ticketRepository.findTicketsByStatus(TicketStatus.RESERVED);
+
+		for (Ticket ticket : tickets) {
+			if (Objects.equals(ticket.getScheduleSeat().getSchedule().getStatus().toString(), "started")) {
+				ticket.expire();
+			}
+		}
 	}
 }
