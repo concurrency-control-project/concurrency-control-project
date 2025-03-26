@@ -1,59 +1,54 @@
 package com.example.concurrencycontrolproject.domain.seat.service;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.List;
 
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
 import com.example.concurrencycontrolproject.domain.seat.repository.ScheduledSeatRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ScheduledSeatService {
-	private final RedissonClient redissonClient;
+
 	private final RedisTemplate<String, Object> redisTemplate;
+	private final DefaultRedisScript<Long> redisScript;
 	private final ScheduledSeatRepository scheduledSeatRepository;
 
-	private static final String REDIS_KEY_PREFIX = "scheduled_seat:";
-
+	// 좌석 예약
 	public boolean reserveSeat(Long scheduleId, Long seatId, Long userId) {
-		String key = REDIS_KEY_PREFIX + scheduleId + ":" + seatId;
-		RLock lock = redissonClient.getLock(key + ":lock");
+		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
+		List<String> keys = Collections.singletonList(redisKey);
+		Long result = redisTemplate.execute(redisScript, keys, userId.toString());
 
-		try {
-			if (!lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-				throw new RuntimeException("현재 좌석 예약이 많아 잠시 후 다시 시도해주세요.");
-			}
-
-			// Redis에서 좌석 상태 조회
-			Map<Object, Object> seatData = redisTemplate.opsForHash().entries(key);
-			if (!seatData.isEmpty() && Boolean.TRUE.equals(seatData.get("is_assigned"))) {
-				throw new RuntimeException("이미 예약된 좌석입니다.");
-			}
-
-			// 예약 상태 업데이트
-			redisTemplate.opsForHash().put(key, "is_assigned", true);
-			redisTemplate.opsForHash().put(key, "reserved_by", userId);
-			redisTemplate.expire(key, 2, TimeUnit.HOURS); // 2시간 후 자동 삭제
-
+		if (result != null && result == 1) {
+			// Redis에 예약 정보 저장
+			ScheduledSeat scheduledSeat = new ScheduledSeat(redisKey, scheduleId, seatId, true, userId);
+			scheduledSeatRepository.save(scheduledSeat);
 			return true;
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		} finally {
-			lock.unlock();
 		}
+		return false;
 	}
 
-	@Transactional
-	public void saveToMySQL(Long scheduleId, Long seatId) {
-		ScheduledSeat scheduledSeat = new ScheduledSeat(null, scheduleId, seatId, true);
-		scheduledSeatRepository.save(scheduledSeat);
+	// 예약 취소
+	public void cancelReservation(Long scheduleId, Long seatId) {
+		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
+
+		// Redis에서 예약 데이터 삭제
+		scheduledSeatRepository.deleteById(redisKey);
+		redisTemplate.delete(redisKey);
+	}
+
+	// 예약 상태 조회
+	public ScheduledSeat getReservation(Long scheduleId, Long seatId) {
+		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
+		return scheduledSeatRepository.findById(redisKey).orElse(null);
 	}
 }
+
+
