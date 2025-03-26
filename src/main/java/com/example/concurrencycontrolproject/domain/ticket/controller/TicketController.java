@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,7 +45,8 @@ public class TicketController {
 	public ResponseEntity<TicketResponseDto> getTicket(
 		// @Auth AuthUser authUser,
 		@RequestParam("userId") Long userId, // 임시
-		@PathVariable Long ticketId) {
+		@PathVariable Long ticketId
+	) {
 		return ResponseEntity.ok(ticketService.getTicket(userId, ticketId));
 	}
 
@@ -55,17 +57,25 @@ public class TicketController {
 		@RequestParam("userId") Long userId, // 임시
 		@PageableDefault(page = 1, size = 10, sort = "createdAt", direction = DESC) Pageable pageable,
 		@RequestParam(required = false) Long scheduleId,
-		@RequestParam(required = false) String scheduleStatus,
 		@RequestParam(required = false) String ticketStatus,
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime startedAt,
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime endedAt
 	) {
 
 		return ResponseEntity.ok(
-			ticketService.getTickets(userId, pageable, scheduleId, scheduleStatus, ticketStatus, startedAt,
+			ticketService.getTickets(userId, pageable, scheduleId, ticketStatus, startedAt,
 				endedAt));
 	}
 
 	// 티켓 취소(환불)
+	@DeleteMapping("/v1/tickets/{ticketId}")
+	public ResponseEntity<Void> deleteTicket(
+		// @Auth AuthUser authUser,
+		@RequestParam("userId") Long userId, // 임시
+		@PathVariable Long ticketId
+	) {
+		ticketService.deleteTicket(userId, ticketId);
+		return ResponseEntity.ok().build();
+	}
 
 }

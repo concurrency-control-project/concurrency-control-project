@@ -46,11 +46,19 @@ public class Ticket extends Timestamped {
 			.build();
 	}
 
-	// 인스턴스 메서드
+	// 티켓 취소 인스턴스 메서드
 	public void cancel() {
 		if (this.status != TicketStatus.RESERVED) {
 			throw new IllegalStateException("취소할 수 없습니다.");
 		}
 		this.status = TicketStatus.CANCELED;
 	}
+
+	// 티켓 만료 인스턴스 메서드
+	public void expire() {
+		if (this.status == TicketStatus.RESERVED) {
+			this.status = TicketStatus.EXPIRED;
+		}
+	}
+
 }

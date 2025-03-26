@@ -28,7 +28,6 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 
 	@Override
 	public Page<TicketResponseDto> findTickets(Long userId, Pageable pageable, Long scheduleId,
-		String scheduleStatus,
 		String ticketStatus, LocalDateTime startedAt, LocalDateTime endedAt) {
 
 		QTicket ticket = QTicket.ticket;
@@ -55,7 +54,6 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 			.where(
 				userIdEq(userId),
 				scheduleIdEq(scheduleId),
-				scheduleStatusEq(scheduleStatus),
 				ticketStatusEq(ticketStatus),
 				dateBetween(startedAt, endedAt)
 			)
@@ -71,7 +69,6 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 			.where(
 				userIdEq(userId),
 				scheduleIdEq(scheduleId),
-				scheduleStatusEq(scheduleStatus),
 				ticketStatusEq(ticketStatus),
 				dateBetween(startedAt, endedAt)
 			)
@@ -86,10 +83,6 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 
 	private BooleanExpression scheduleIdEq(Long scheduleId) {
 		return scheduleId != null ? ticket.scheduleSeat.id.eq(scheduleId) : null;
-	}
-
-	private BooleanExpression scheduleStatusEq(String scheduleStatus) {
-		return scheduleStatus != null ? scheduleSeat.schedule.status.eq(scheduleStatus) : null;
 	}
 
 	private BooleanExpression ticketStatusEq(String ticketStatus) {
