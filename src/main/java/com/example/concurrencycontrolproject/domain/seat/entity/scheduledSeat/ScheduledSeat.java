@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.entity;
+package com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;

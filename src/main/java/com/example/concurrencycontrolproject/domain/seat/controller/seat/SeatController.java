@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.controller;
+package com.example.concurrencycontrolproject.domain.seat.controller.seat;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.concurrencycontrolproject.domain.seat.dto.SeatRequestDTO;
-import com.example.concurrencycontrolproject.domain.seat.dto.SeatResponseDTO;
-import com.example.concurrencycontrolproject.domain.seat.service.SeatService;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatRequestDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.service.seat.SeatService;
 
 import lombok.RequiredArgsConstructor;
 

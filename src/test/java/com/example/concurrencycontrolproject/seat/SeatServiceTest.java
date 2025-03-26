@@ -13,11 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.concurrencycontrolproject.domain.seat.dto.SeatRequestDTO;
-import com.example.concurrencycontrolproject.domain.seat.dto.SeatResponseDTO;
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
-import com.example.concurrencycontrolproject.domain.seat.repository.SeatRepository;
-import com.example.concurrencycontrolproject.domain.seat.service.SeatService;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatRequestDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
+import com.example.concurrencycontrolproject.domain.seat.repository.seat.SeatRepository;
+import com.example.concurrencycontrolproject.domain.seat.service.seat.SeatService;
 
 @ExtendWith(MockitoExtension.class)
 public class SeatServiceTest {
