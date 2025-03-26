@@ -7,7 +7,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.concurrencycontrolproject.domain.auth.dto.SignupResponse;
-import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.exception.AlreadyExistsEmailException;
 import com.example.concurrencycontrolproject.domain.user.exception.EmailAccessDeniedException;
@@ -15,6 +14,7 @@ import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFound
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
+import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final JwtUtil jwtUtil;
-	private final RefreshTokenRepository refreshTokenRepository;
+	private final RedisCacheUtil redisCache;
 
 	public SignupResponse signup(String email, String password, String nickname, String phoneNumber) {
 		if (userRepository.existsByEmail(email)) {
@@ -52,10 +52,12 @@ public class AuthService {
 			throw new InvalidPasswordException();
 		}
 
-		jwtUtil.saveAccessToken(
-			jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole(), user.getNickname()),
-			servletResponse);
-		jwtUtil.saveRefreshToken(
-			jwtUtil.createRefreshToken(user.getId()), String.valueOf(user.getId()), servletResponse);
+		String accessToken = jwtUtil.createAccessToken(user.getId(), user.getEmail(), user.getRole(),
+			user.getNickname());
+		jwtUtil.accessTokenSetHeader(accessToken, servletResponse);
+
+		String refreshToken = jwtUtil.createRefreshToken(user.getId());
+		jwtUtil.refreshTokenSetCookie(refreshToken, servletResponse);
+		redisCache.saveRefreshToken(refreshToken, String.valueOf(user.getId()));
 	}
 }
