@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.controller;
+package com.example.concurrencycontrolproject.domain.seat.controller.scheduledSeat;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.concurrencycontrolproject.domain.seat.dto.ScheduledSeatRequestDTO;
-import com.example.concurrencycontrolproject.domain.seat.dto.ScheduledSeatResponseDTO;
-import com.example.concurrencycontrolproject.domain.seat.entity.ScheduledSeat;
-import com.example.concurrencycontrolproject.domain.seat.service.ScheduledSeatService;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatRequestDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
+import com.example.concurrencycontrolproject.domain.seat.service.scheduledSeat.ScheduledSeatService;
 
 import lombok.RequiredArgsConstructor;
 

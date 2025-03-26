@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.exception;
+package com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat;
 
 import org.springframework.http.HttpStatus;
 
@@ -24,18 +24,18 @@ public enum ScheduledSeatErrorCode implements ErrorCode {
 	// 	this.defaultMessage = defaultMessage;
 	// }
 
-	// @Override
-	// public String getCode() {
-	// 	return this.code;
-	// }
-	//
-	// @Override
-	// public HttpStatus getHttpStatus() {
-	// 	return this.status;
-	// }
-	//
-	// @Override
-	// public String getDefaultMessage() {
-	// 	return this.defaultMessage;
-	// }
+	@Override
+	public String getCode() {
+		return this.code;
+	}
+
+	@Override
+	public HttpStatus getHttpStatus() {
+		return this.status;
+	}
+
+	@Override
+	public String getDefaultMessage() {
+		return this.defaultMessage;
+	}
 }

@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.seat.dto;
+package com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,11 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduledSeatResponseDTO {
-	private String id;
+public class ScheduledSeatRequestDTO {
 	private Long scheduleId;
 	private Long seatId;
-	private Boolean isAssigned;
-	private Long reservedBy;
 }
-
