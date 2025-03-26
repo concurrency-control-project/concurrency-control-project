@@ -2,6 +2,7 @@ package com.example.concurrencycontrolproject.domain.schedule.entity;
 
 import static lombok.AccessLevel.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
@@ -45,6 +46,10 @@ public class Schedule extends BaseTime {
 		this.concert = concert;
 		this.datetime = datetime;
 		this.status = status;
+	}
+
+	public static Schedule of(Concert concert, LocalDateTime datetime, ScheduleStatus status) {
+		return new Schedule(concert, datetime, status);
 	}
 
 	public void updateDateTime(LocalDateTime datetime) {

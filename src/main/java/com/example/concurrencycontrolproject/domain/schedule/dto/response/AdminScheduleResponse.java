@@ -14,7 +14,7 @@ public class AdminScheduleResponse {
 
 	private final Long id;
 	private final Long concertId;
-	private final String concertName;
+	private final String concertTitle;
 	private final LocalDateTime datetime;
 	private final ScheduleStatus status;
 
@@ -25,6 +25,6 @@ public class AdminScheduleResponse {
 			schedule.getConcert().getTitle(),
 			schedule.getDatetime(),
 			schedule.getStatus()
-		)
+		);
 	}
 }
