@@ -3,6 +3,9 @@ package com.example.concurrencycontrolproject.seat;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +62,20 @@ public class SeatServiceTest {
 
 	@Test
 	void testGetAllSeat() {
+		//given
+		List<Seat> seats = Arrays.asList(seat1, seat2);
+		when(seatRepository.findAll()).thenReturn(seats);
+
+		//when
+		List<SeatResponseDTO> ResponseDTOs = seatService.getAllSeats();
+
+		//then
+		assertThat(ResponseDTOs).hasSize(2);
+		assertThat(ResponseDTOs).extracting("id").containsExactly(1L, 2L);
+		assertThat(ResponseDTOs).extracting("grade").containsExactly("VIP", "VIP");
+		assertThat(ResponseDTOs).extracting("section").containsExactly("A", "B");
+
+		verify(seatRepository, times(1)).findAll();
 
 	}
 }
