@@ -25,6 +25,7 @@ import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 import com.example.concurrencycontrolproject.domain.userTicket.entity.UserTicket;
 import com.example.concurrencycontrolproject.domain.userTicket.repository.UserTicketRepository;
+import com.example.concurrencycontrolproject.global.config.aop.DistributedLock;
 
 import lombok.RequiredArgsConstructor;
 
@@ -78,6 +79,7 @@ public class TicketService {
 
 	// 티켓 생성
 	@Transactional
+	@DistributedLock(keyPrefix = "scheduleSeatId", keySuffixExpression = "#scheduleSeatId")
 	public TicketResponse saveTicket(AuthUser authUser, Long scheduleSeatId) {
 
 		// 유저 검증
@@ -138,6 +140,7 @@ public class TicketService {
 	}
 
 	// 티켓 취소
+	@Transactional
 	public void deleteTicket(AuthUser authUser, Long ticketId) {
 
 		// 유저 검증
@@ -161,6 +164,8 @@ public class TicketService {
 	}
 
 	// 티켓 좌석 변경
+	@Transactional
+	@DistributedLock(keyPrefix = "scheduleSeatId", keySuffixExpression = "#requestDto.scheduleSeatId")
 	public TicketResponse updateTicket(AuthUser authUser, Long ticketId, TicketChangeRequest requestDto) {
 		// 유저 검증
 		findUser(authUser.getId());
@@ -198,13 +203,16 @@ public class TicketService {
 		return TicketResponse.ticketResponse(updatedTicket);
 	}
 
-	// 스케줄링 메서드
+	// 티켓을 만료시키는 스케줄링 메서드
+	// Todo: 성능 생각하면 굳이 스케줄링으로 하지 말고, 스케줄의 상태 변경 시에 티켓도 전부 변경하는 게 좋아 보입니다.
+	@Transactional
 	@Scheduled(cron = "0 * * * * *")
 	public void expireTicket() {
 		List<Ticket> tickets = ticketRepository.findTicketsByStatus(TicketStatus.RESERVED);
 
 		for (Ticket ticket : tickets) {
-			if (Objects.equals(ticket.getScheduleSeat().getSchedule().getStatus().toString(), "started")) {
+			if (Objects.equals(ticket.getScheduleSeat().getSchedule().getStatus().toString(),
+				"started")) { // 티켓의 상태 이넘 값을 몰라서 임시로 started 넣었습니다.
 				ticket.expire();
 			}
 		}
