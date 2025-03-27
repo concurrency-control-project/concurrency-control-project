@@ -11,14 +11,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduledSeatResponseDTO {
+public class ScheduledSeatResponse {
 	private String id;
 	private Long scheduleId;
 	private Long seatId;
 	private Boolean isAssigned;
 	private Long reservedBy;
 
-	public ScheduledSeatResponseDTO(ScheduledSeat scheduledSeat) {
+	public ScheduledSeatResponse(ScheduledSeat scheduledSeat) {
 		this.id = scheduledSeat.getId();
 		this.scheduleId = scheduledSeat.getScheduleId();
 		this.seatId = scheduledSeat.getSeatId();

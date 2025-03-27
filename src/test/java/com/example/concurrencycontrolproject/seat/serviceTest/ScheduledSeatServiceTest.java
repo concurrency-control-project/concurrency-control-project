@@ -17,7 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.example.concurrencycontrolproject.domain.common.response.Response;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponse;
 import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
 import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatErrorCode;
 import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatException;
@@ -58,7 +58,7 @@ class ScheduledSeatServiceTest {
 		when(scheduledSeatRepository.save(any(ScheduledSeat.class))).thenReturn(scheduledSeat);
 
 		// When
-		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.reserveSeat(scheduleId, seatId, userId);
+		Response<ScheduledSeatResponse> response = scheduledSeatService.reserveSeat(scheduleId, seatId, userId);
 
 		// Then
 		assertNotNull(response);
@@ -87,7 +87,7 @@ class ScheduledSeatServiceTest {
 		when(scheduledSeatRepository.findById(redisKey)).thenReturn(Optional.of(scheduledSeat));
 
 		// When
-		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.cancelReservation(scheduleId, seatId);
+		Response<ScheduledSeatResponse> response = scheduledSeatService.cancelReservation(scheduleId, seatId);
 
 		// Then
 		assertNotNull(response);
@@ -116,7 +116,7 @@ class ScheduledSeatServiceTest {
 		when(scheduledSeatRepository.findById(redisKey)).thenReturn(Optional.of(scheduledSeat));
 
 		// When
-		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.getReservation(scheduleId, seatId);
+		Response<ScheduledSeatResponse> response = scheduledSeatService.getReservation(scheduleId, seatId);
 
 		// Then
 		assertNotNull(response);

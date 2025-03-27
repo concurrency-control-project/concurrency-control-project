@@ -1,5 +1,7 @@
 package com.example.concurrencycontrolproject.domain.seat.dto.Seat;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,10 +11,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
-public class SeatRequestDTO {
-	private Integer number;
-	private String grade;
-	private Integer price;
-	private String section;
+public class SeatPageResponse {
+	private List<SeatResponse> seats;
+	private int currentPage;
+	private int totalPages;
+	private long totalElements;
 }
+

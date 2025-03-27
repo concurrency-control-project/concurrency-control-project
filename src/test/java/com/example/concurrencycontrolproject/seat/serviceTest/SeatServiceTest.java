@@ -21,8 +21,8 @@ import org.springframework.data.domain.Pageable;
 
 import com.example.concurrencycontrolproject.domain.common.response.PageResponse;
 import com.example.concurrencycontrolproject.domain.common.response.Response;
-import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatRequestDTO;
-import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatRequest;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponse;
 import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
 import com.example.concurrencycontrolproject.domain.seat.exception.seat.SeatErrorCode;
 import com.example.concurrencycontrolproject.domain.seat.exception.seat.SeatException;
@@ -47,14 +47,14 @@ public class SeatServiceTest {
 
 	@Test
 	void testCreateSeat_Success() {
-		// Given (SeatRequestDTO 설정)
-		SeatRequestDTO requestDTO = new SeatRequestDTO(1, "VIP", 100000, "A구역");
+		// Given (SeatRequest 설정)
+		SeatRequest requestDTO = new SeatRequest(1, "VIP", 100000, "A구역");
 
 		// Stub 설정 (seatRepository.save()가 실행되면 seat 반환)
 		when(seatRepository.save(any(Seat.class))).thenReturn(seat);
 
 		// When (서비스 메서드 호출)
-		Response<SeatResponseDTO> response = seatService.createSeat(requestDTO);
+		Response<SeatResponse> response = seatService.createSeat(requestDTO);
 
 		// Then (검증)
 		assertThat(response.getData()).isNotNull();
@@ -70,8 +70,8 @@ public class SeatServiceTest {
 
 	@Test
 	void testCreateSeat_Fail_WhenInvalidData() {
-		// Given: 잘못된 SeatRequestDTO (음수 값)
-		SeatRequestDTO requestDTO = new SeatRequestDTO(-1, "VIP", -50000, "A구역");
+		// Given: 잘못된 SeatRequest (음수 값)
+		SeatRequest requestDTO = new SeatRequest(-1, "VIP", -50000, "A구역");
 
 		// When & Then
 		SeatException exception = assertThrows(
@@ -95,7 +95,7 @@ public class SeatServiceTest {
 		when(seatRepository.findAll(any(Pageable.class))).thenReturn(seatPage);
 
 		// When
-		Response<PageResponse<SeatResponseDTO>> response = seatService.getAllSeats(page, size);
+		Response<PageResponse<SeatResponse>> response = seatService.getAllSeats(page, size);
 
 		// Then
 		assertThat(response.getData()).isNotNull();

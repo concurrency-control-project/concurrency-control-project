@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ScheduledSeatRequestDTO {
+public class ScheduledSeatRequest {
 	private Long scheduleId;
 	private Long seatId;
 }
