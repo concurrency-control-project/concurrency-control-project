@@ -25,5 +25,12 @@ public class Seat {
 	private String grade;
 	private Integer price;
 	private String section;
+
+	public void update(int number, String grade, int price, String section) {
+		this.number = number;
+		this.grade = grade;
+		this.price = price;
+		this.section = section;
+	}
 }
 

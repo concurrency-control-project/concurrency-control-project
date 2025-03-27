@@ -1,8 +1,11 @@
 package com.example.concurrencycontrolproject.domain.seat.controller.seat;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,6 +36,24 @@ public class SeatController {
 		@RequestParam(defaultValue = "10") int size
 	) {
 		return ResponseEntity.ok(seatService.getAllSeats(page, size));
+	}
+
+	@GetMapping("/{seatId}")
+	public ResponseEntity<Response<SeatResponseDTO>> getSeat(@PathVariable Long seatId) {
+		return ResponseEntity.ok(seatService.getSeat(seatId));
+	}
+
+	@PutMapping("/{seatId}")
+	public ResponseEntity<Response<SeatResponseDTO>> updateSeat(
+		@PathVariable Long seatId,
+		@RequestBody SeatRequestDTO requestDTO
+	) {
+		return ResponseEntity.ok(seatService.updateSeat(seatId, requestDTO));
+	}
+
+	@DeleteMapping("/{seatId}")
+	public ResponseEntity<Response<String>> deleteSeat(@PathVariable Long seatId) {
+		return ResponseEntity.ok(seatService.deleteSeat(seatId));
 	}
 }
 
