@@ -3,9 +3,7 @@ package com.example.concurrencycontrolproject.domain.schedule.dto.response;
 import java.time.LocalDateTime;
 
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
-import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
