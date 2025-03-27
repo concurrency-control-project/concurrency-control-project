@@ -33,8 +33,8 @@ public class GlobalExceptionHandler {
 		return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
 	}
 
-	@ExceptionHandler(CustomException.class)
-	public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+	@ExceptionHandler(ConcertException.class)
+	public ResponseEntity<ErrorResponse> handleCustomException(ConcertException e) {
 		log.info("CustomException : {}", e.getMessage(), e);
 		return new ResponseEntity<>(ErrorResponse.of(e.getErrorCode(), e.getMessage()), e.getStatus());
 	}
