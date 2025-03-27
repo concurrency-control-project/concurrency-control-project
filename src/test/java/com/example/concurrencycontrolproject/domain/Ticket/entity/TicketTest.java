@@ -12,6 +12,7 @@ import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.Schedule
 import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
+import com.example.concurrencycontrolproject.domain.ticket.exception.TicketException;
 
 // 유닛 테스트
 public class TicketTest {
@@ -76,8 +77,8 @@ public class TicketTest {
 			.build();
 
 		// when, then
-		IllegalStateException exception = assertThrows(IllegalStateException.class, ticket::cancel);
-		assertThat(exception.getMessage()).isEqualTo("취소할 수 없습니다.");
+		TicketException exception = assertThrows(TicketException.class, ticket::cancel);
+		assertThat(exception.getMessage()).isEqualTo("예약된 상태의 티켓만 좌석을 변경할 수 있습니다.");
 	}
 
 	@Test
@@ -154,10 +155,10 @@ public class TicketTest {
 			.build();
 
 		// when, then
-		IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+		TicketException exception = assertThrows(TicketException.class,
 			() -> ticket.changeScheduleSeat(null));
 
-		assertThat(exception.getMessage()).isEqualTo("새로운 좌석 정보가 올바르지 않습니다.");
+		assertThat(exception.getMessage()).isEqualTo("올바르지 않거나 선택할 수 없는 좌석입니다.");
 	}
 
 }
