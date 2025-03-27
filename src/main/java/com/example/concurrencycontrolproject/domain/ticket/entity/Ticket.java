@@ -2,6 +2,8 @@ package com.example.concurrencycontrolproject.domain.ticket.entity;
 
 import com.example.concurrencycontrolproject.domain.common.entity.Timestamped;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
+import com.example.concurrencycontrolproject.domain.ticket.exception.TicketErrorCode;
+import com.example.concurrencycontrolproject.domain.ticket.exception.TicketException;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -49,7 +51,7 @@ public class Ticket extends Timestamped {
 	// 티켓 취소 인스턴스 메서드
 	public void cancel() {
 		if (this.status != TicketStatus.RESERVED) {
-			throw new IllegalStateException("취소할 수 없습니다.");
+			throw new TicketException(TicketErrorCode.TICKET_UPDATE_INVALID_STATUS);
 		}
 		this.status = TicketStatus.CANCELED;
 	}
@@ -59,6 +61,15 @@ public class Ticket extends Timestamped {
 		if (this.status == TicketStatus.RESERVED) {
 			this.status = TicketStatus.EXPIRED;
 		}
+	}
+
+	// 좌석 변경
+	public void changeScheduleSeat(ScheduleSeat newScheduleSeat) {
+		if (newScheduleSeat == null) {
+			throw new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
+		}
+		this.scheduleSeat = newScheduleSeat;
+
 	}
 
 }
