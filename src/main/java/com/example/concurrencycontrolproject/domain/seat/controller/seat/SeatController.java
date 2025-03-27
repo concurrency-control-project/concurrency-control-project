@@ -84,24 +84,6 @@ public class SeatController {
 	private SeatResponse toSeatResponse(Seat seat) {
 		return new SeatResponse(seat.getId(), seat.getNumber(), seat.getGrade(), seat.getPrice(), seat.getSection());
 	}
-
-	@GetMapping("/{seatId}")
-	public ResponseEntity<Response<SeatResponseDTO>> getSeat(@PathVariable Long seatId) {
-		return ResponseEntity.ok(seatService.getSeat(seatId));
-	}
-
-	@PutMapping("/{seatId}")
-	public ResponseEntity<Response<SeatResponseDTO>> updateSeat(
-		@PathVariable Long seatId,
-		@RequestBody SeatRequestDTO requestDTO
-	) {
-		return ResponseEntity.ok(seatService.updateSeat(seatId, requestDTO));
-	}
-
-	@DeleteMapping("/{seatId}")
-	public ResponseEntity<Response<String>> deleteSeat(@PathVariable Long seatId) {
-		return ResponseEntity.ok(seatService.deleteSeat(seatId));
-	}
 }
 
 
