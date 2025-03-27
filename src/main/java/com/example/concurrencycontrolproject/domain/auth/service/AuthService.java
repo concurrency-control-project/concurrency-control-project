@@ -14,7 +14,7 @@ import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFound
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
-import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
+import com.example.concurrencycontrolproject.global.redis.RefreshCacheUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class AuthService {
 	private final UserRepository userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	private final JwtUtil jwtUtil;
-	private final RedisCacheUtil redisCache;
+	private final RefreshCacheUtil redisCache;
 
 	public SignupResponse signup(String email, String password, String nickname, String phoneNumber) {
 		if (userRepository.existsByEmail(email)) {

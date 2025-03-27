@@ -17,7 +17,7 @@ import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
-import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
+import com.example.concurrencycontrolproject.global.redis.RefreshCacheUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.MalformedJwtException;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
-	private final RedisCacheUtil redisCache;
+	private final RefreshCacheUtil redisCache;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,

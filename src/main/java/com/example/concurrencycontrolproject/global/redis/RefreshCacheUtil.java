@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
-public class RedisCacheUtil {
+public class RefreshCacheUtil {
 
 	private final RefreshTokenRepository refreshTokenRepository;
 
