@@ -1,14 +1,15 @@
 package com.example.concurrencycontrolproject.domain.seat.controller.seat;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.concurrencycontrolproject.domain.common.response.PageResponse;
+import com.example.concurrencycontrolproject.domain.common.response.Response;
 import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatRequestDTO;
 import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponseDTO;
 import com.example.concurrencycontrolproject.domain.seat.service.seat.SeatService;
@@ -16,19 +17,22 @@ import com.example.concurrencycontrolproject.domain.seat.service.seat.SeatServic
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("./api/v1/seats")
+@RequestMapping("/api/v1/seats")
 @RequiredArgsConstructor
 public class SeatController {
 	private final SeatService seatService;
 
 	@PostMapping
-	public ResponseEntity<SeatResponseDTO> createSeat(@RequestBody SeatRequestDTO requestDTO) {
+	public ResponseEntity<Response<SeatResponseDTO>> createSeat(@RequestBody SeatRequestDTO requestDTO) {
 		return ResponseEntity.ok(seatService.createSeat(requestDTO));
 	}
 
-	@GetMapping("./api/v1/seats/getAll")
-	public ResponseEntity<List<SeatResponseDTO>> getAllSeats() {
-		return ResponseEntity.ok(seatService.getAllSeats());
+	@GetMapping
+	public ResponseEntity<Response<PageResponse<SeatResponseDTO>>> getAllSeats(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		return ResponseEntity.ok(seatService.getAllSeats(page, size));
 	}
 }
 
