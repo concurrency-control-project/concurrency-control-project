@@ -27,7 +27,7 @@ import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFound
 import com.example.concurrencycontrolproject.domain.user.exception.InvalidPasswordException;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
-import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
+import com.example.concurrencycontrolproject.global.redis.RefreshCacheUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -35,7 +35,7 @@ import jakarta.servlet.http.HttpServletResponse;
 class AuthServiceTest {
 
 	@Mock
-	private RedisCacheUtil redisCacheUtil;
+	private RefreshCacheUtil redisCacheUtil;
 	@Mock
 	private JwtUtil jwtUtil;
 	@Mock
