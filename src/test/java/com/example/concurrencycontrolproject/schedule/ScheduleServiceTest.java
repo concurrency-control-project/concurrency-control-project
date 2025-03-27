@@ -25,8 +25,8 @@ import static org.assertj.core.api.Assertions.*;
 @Transactional
 class ScheduleServiceTest {
 
-	// 현재 시큐리티 설정이 미적용된 상태에서 테스트 중.
-	// 이 테스트에서는 authUser를 null로 처리하여 테스트 진행.
+	// 현재 시큐리티 설정이 미적용된 상태에서 테스트 중
+	// 이 테스트에서는 authUser를 null로 처리하여 테스트 진행
 
 	@Autowired
 	private ScheduleService scheduleService;
