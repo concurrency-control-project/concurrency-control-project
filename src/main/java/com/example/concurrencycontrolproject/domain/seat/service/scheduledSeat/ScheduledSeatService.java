@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.example.concurrencycontrolproject.domain.common.response.Response;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponse;
 import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
 import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatErrorCode;
 import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatException;
@@ -25,7 +25,7 @@ public class ScheduledSeatService {
 	private final ScheduledSeatRepository scheduledSeatRepository;
 
 	// 좌석 예약
-	public Response<ScheduledSeatResponseDTO> reserveSeat(Long scheduleId, Long seatId, Long userId) {
+	public Response<ScheduledSeatResponse> reserveSeat(Long scheduleId, Long seatId, Long userId) {
 		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 		List<String> keys = Collections.singletonList(redisKey);
 
@@ -37,11 +37,11 @@ public class ScheduledSeatService {
 
 		ScheduledSeat scheduledSeat = new ScheduledSeat(redisKey, scheduleId, seatId, true, userId);
 		scheduledSeatRepository.save(scheduledSeat);
-		return Response.of(new ScheduledSeatResponseDTO(scheduledSeat));
+		return Response.of(new ScheduledSeatResponse(scheduledSeat));
 	}
 
 	// 예약 취소
-	public Response<ScheduledSeatResponseDTO> cancelReservation(Long scheduleId, Long seatId) {
+	public Response<ScheduledSeatResponse> cancelReservation(Long scheduleId, Long seatId) {
 		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 
 		if (!scheduledSeatRepository.existsById(redisKey)) {
@@ -54,19 +54,19 @@ public class ScheduledSeatService {
 		scheduledSeatRepository.deleteById(redisKey);
 		redisTemplate.delete(redisKey);
 
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(scheduledSeat);
+		ScheduledSeatResponse responseDTO = new ScheduledSeatResponse(scheduledSeat);
 
 		return Response.of(responseDTO);
 	}
 
 	// 예약 상태 조회
-	public Response<ScheduledSeatResponseDTO> getReservation(Long scheduleId, Long seatId) {
+	public Response<ScheduledSeatResponse> getReservation(Long scheduleId, Long seatId) {
 		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 
 		ScheduledSeat reservation = scheduledSeatRepository.findById(redisKey)
 			.orElseThrow(() -> new ScheduledSeatException(ScheduledSeatErrorCode.SEAT_NOT_FOUND));
 
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(reservation);
+		ScheduledSeatResponse responseDTO = new ScheduledSeatResponse(reservation);
 		return Response.of(responseDTO);
 	}
 }

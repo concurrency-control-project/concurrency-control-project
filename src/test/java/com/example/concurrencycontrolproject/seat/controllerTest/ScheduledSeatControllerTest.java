@@ -15,8 +15,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.example.concurrencycontrolproject.domain.common.response.Response;
 import com.example.concurrencycontrolproject.domain.seat.controller.scheduledSeat.ScheduledSeatController;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatRequestDTO;
-import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponseDTO;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatRequest;
+import com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat.ScheduledSeatResponse;
 import com.example.concurrencycontrolproject.domain.seat.service.scheduledSeat.ScheduledSeatService;
 
 public class ScheduledSeatControllerTest {
@@ -38,12 +38,12 @@ public class ScheduledSeatControllerTest {
 	@Test
 	public void testReserveSeat() throws Exception {
 		// Given
-		ScheduledSeatRequestDTO requestDTO = new ScheduledSeatRequestDTO();
+		ScheduledSeatRequest requestDTO = new ScheduledSeatRequest();
 		requestDTO.setScheduleId(1L);
 		requestDTO.setSeatId(1L);
 
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO("redisKey", 1L, 1L, true, 1L);
-		Response<ScheduledSeatResponseDTO> response = Response.of(responseDTO);
+		ScheduledSeatResponse responseDTO = new ScheduledSeatResponse("redisKey", 1L, 1L, true, 1L);
+		Response<ScheduledSeatResponse> response = Response.of(responseDTO);
 
 		// When
 		when(scheduledSeatService.reserveSeat(anyLong(), anyLong(), anyLong())).thenReturn(response);
@@ -61,8 +61,8 @@ public class ScheduledSeatControllerTest {
 	@Test
 	public void testCancelReservation() throws Exception {
 		// Given
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO("redisKey", 1L, 1L, false, null);
-		Response<ScheduledSeatResponseDTO> response = Response.of(responseDTO);
+		ScheduledSeatResponse responseDTO = new ScheduledSeatResponse("redisKey", 1L, 1L, false, null);
+		Response<ScheduledSeatResponse> response = Response.of(responseDTO);
 
 		// When
 		when(scheduledSeatService.cancelReservation(anyLong(), anyLong())).thenReturn(response);
@@ -78,8 +78,8 @@ public class ScheduledSeatControllerTest {
 	@Test
 	public void testGetReservation() throws Exception {
 		// Given
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO("redisKey", 1L, 1L, true, 1L);
-		Response<ScheduledSeatResponseDTO> response = Response.of(responseDTO);
+		ScheduledSeatResponse responseDTO = new ScheduledSeatResponse("redisKey", 1L, 1L, true, 1L);
+		Response<ScheduledSeatResponse> response = Response.of(responseDTO);
 
 		// When
 		when(scheduledSeatService.getReservation(anyLong(), anyLong())).thenReturn(response);
