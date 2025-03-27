@@ -23,7 +23,6 @@ import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleE
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleException;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,10 +34,10 @@ public class ScheduleService {
 
 	// 공연 스케줄 생성
 	@Transactional
-	public AdminScheduleResponse saveSchedule(AuthUser authUser, @Valid CreateScheduleRequest request) {
+	public AdminScheduleResponse saveSchedule(AuthUser authUser, CreateScheduleRequest request) {
 
 		Concert concert = findConcertById(request.getConcertId());
-		Schedule schedule = Schedule.of(concert, request.getDatetime(), ScheduleStatus.ACTIVE);
+		Schedule schedule = Schedule.of(concert, request.getDateTime(), ScheduleStatus.ACTIVE);
 
 		Schedule savedSchedule = scheduleRepository.save(schedule);
 		return AdminScheduleResponse.of(savedSchedule);
@@ -82,21 +81,24 @@ public class ScheduleService {
 	// 공연 스케줄 정보 수정
 	@Transactional
 	public AdminScheduleResponse updateSchedule(AuthUser authUser, Long concertId, Long scheduleId,
-		@Valid UpdateScheduleRequest request) {
+		UpdateScheduleRequest request) {
 
 		Schedule schedule = findScheduleByConcertIdAndId(concertId, scheduleId);
 
-		schedule.updateDateTime(request.getDatetime());
+		schedule.updateDateTime(request.getDateTime());
 		return AdminScheduleResponse.of(schedule);
 	}
 
 	// 공연 스케줄 상태 수정
 	@Transactional
 	public AdminScheduleResponse updateScheduleStatus(AuthUser authUser, Long concertId, Long scheduleId,
-		@Valid UpdateScheduleStatusRequest request) {
+		UpdateScheduleStatusRequest request) {
 
 		Schedule schedule = findScheduleByConcertIdAndId(concertId, scheduleId);
 
+		// 관리자는 ACTIVE나 CANCELED 상태로는 변경할 수 있지만,
+		// DELETED 상태는 deleteSchedule() 메서드를 통해서만 변경할 수 있습니다.
+		// 이 로직에서는 DELETED 상태로의 변경을 막고 있습니다.
 		if (request.getStatus() == ScheduleStatus.DELETED) {
 			throw new ScheduleException(ScheduleErrorCode.CANNOT_CHANGE_DELETED_STATUS);
 		}
