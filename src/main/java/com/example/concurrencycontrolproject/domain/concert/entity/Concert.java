@@ -1,6 +1,5 @@
 package com.example.concurrencycontrolproject.domain.concert.entity;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
@@ -25,13 +24,10 @@ public class Concert {
 	private String title;
 	private String performer;
 	private String description;
-	LocalDateTime concertStartDateTime;
-	LocalDateTime concertEndDateTime;
-	LocalDateTime bookingStartDateTime;
-	LocalDateTime bookingEndDateTime;
-	private LocalDate startDate;
-	private LocalDate endDate;
-	private int runningTime;
+	private LocalDateTime concertStartDateTime;
+	private LocalDateTime concertEndDateTime;
+	private LocalDateTime bookingStartDateTime;
+	private LocalDateTime bookingEndDateTime;
 	private String location;
 	@Enumerated(EnumType.STRING)
 	private ConcertStatus status;
@@ -39,7 +35,7 @@ public class Concert {
 	@Builder
 	private Concert(String title, String performer, String description, LocalDateTime concertStartDateTime,
 		LocalDateTime concertEndDateTime, LocalDateTime bookingStartDateTime, LocalDateTime bookingEndDateTime,
-		LocalDate startDate, LocalDate endDate, int runningTime, String location) {
+		String location) {
 		this.title = title;
 		this.performer = performer;
 		this.description = description;
@@ -47,10 +43,29 @@ public class Concert {
 		this.concertEndDateTime = concertEndDateTime;
 		this.bookingStartDateTime = bookingStartDateTime;
 		this.bookingEndDateTime = bookingEndDateTime;
-		this.startDate = startDate;
-		this.endDate = endDate;
-		this.runningTime = runningTime;
 		this.location = location;
 		this.status = ConcertStatus.PLANNED;
 	}
+
+	public void update(String title, String performer, String description, LocalDateTime concertStartDateTime,
+		LocalDateTime concertEndDateTime, LocalDateTime bookingStartDateTime, LocalDateTime bookingEndDateTime,
+		String location) {
+		this.title = title;
+		this.performer = performer;
+		this.description = description;
+		this.concertStartDateTime = concertStartDateTime;
+		this.concertEndDateTime = concertEndDateTime;
+		this.bookingStartDateTime = bookingStartDateTime;
+		this.bookingEndDateTime = bookingEndDateTime;
+		this.location = location;
+	}
+
+	public void softDelete() {
+		this.status = ConcertStatus.DELETED;
+	}
+
+	public boolean isPlanned() {
+		return this.status == ConcertStatus.PLANNED;
+	}
+
 }
