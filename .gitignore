@@ -35,5 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
-.yml
+*.yml
 .DS_Store
+mysql_data/
