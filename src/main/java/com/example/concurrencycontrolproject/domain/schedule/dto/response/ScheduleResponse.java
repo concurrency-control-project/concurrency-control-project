@@ -23,6 +23,6 @@ public class ScheduleResponse {
 			schedule.getConcert().getId(),
 			schedule.getDatetime(),
 			schedule.getStatus()
-		)
+		);
 	}
 }
