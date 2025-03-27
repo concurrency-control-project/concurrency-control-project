@@ -54,5 +54,5 @@ public class SeatService {
 		seatRepository.deleteById(seatId);
 		return true;
 	}
-
+	//사고방지
 }
