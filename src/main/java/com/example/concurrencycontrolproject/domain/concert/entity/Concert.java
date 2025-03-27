@@ -68,4 +68,8 @@ public class Concert {
 		return this.status == ConcertStatus.PLANNED;
 	}
 
+	public void updateStatus(ConcertStatus status) {
+		this.status = status;
+	}
+
 }
