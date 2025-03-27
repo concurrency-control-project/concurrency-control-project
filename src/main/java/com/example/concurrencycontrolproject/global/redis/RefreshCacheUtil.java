@@ -3,7 +3,7 @@ package com.example.concurrencycontrolproject.global.redis;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import com.example.concurrencycontrolproject.domain.auth.exception.AuthenticationExpiredException;
 import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
@@ -11,7 +11,7 @@ import com.example.concurrencycontrolproject.domain.token.repository.RefreshToke
 
 import lombok.RequiredArgsConstructor;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class RefreshCacheUtil {
 
