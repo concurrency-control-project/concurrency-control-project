@@ -1,5 +1,6 @@
 package com.example.concurrencycontrolproject.domain.seat.service.seat;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -24,36 +25,31 @@ public class SeatService {
 	private final SeatRepository seatRepository;
 
 	public Response<SeatResponseDTO> createSeat(SeatRequestDTO dto) {
+		validateSeatData(dto);
 
-		if (dto.getNumber() <= 0 || dto.getPrice() < 0) {
-			throw new SeatException(SeatErrorCode.INVALID_SEAT_DATA);
-		}
 		Seat seat = new Seat(null, dto.getNumber(), dto.getGrade(), dto.getPrice(), dto.getSection());
-		try {
-			Seat savedSeat = seatRepository.save(seat);
-			SeatResponseDTO responseDTO = new SeatResponseDTO(savedSeat.getId(), savedSeat.getNumber(),
-				savedSeat.getGrade(),
-				savedSeat.getPrice(), savedSeat.getSection());
-			return Response.of(responseDTO);
-		} catch (Exception e) {
-			throw new SeatException(SeatErrorCode.SEAT_CREATION_FAILED);
-		}
+		Seat savedSeat = seatRepository.save(seat);
+
+		return Response.of(toResponseDTO(savedSeat));
 	}
 
 	public Response<PageResponse<SeatResponseDTO>> getAllSeats(int page, int size) {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<Seat> seatPage = seatRepository.findAll(pageable);
 
+		List<SeatResponseDTO> seatDTOList = seatPage.getContent()
+			.stream()
+			.map(this::toResponseDTO)
+			.collect(Collectors.toList());
+
 		PageResponse<SeatResponseDTO> pageResponse = new PageResponse<>(
-			seatPage.getContent().stream()
-				.map(seat -> new SeatResponseDTO(seat.getId(), seat.getNumber(), seat.getGrade(), seat.getPrice(),
-					seat.getSection()))
-				.collect(Collectors.toList()),
+			seatDTOList,
 			seatPage.getNumber(),
 			seatPage.getSize(),
 			seatPage.getTotalPages(),
 			seatPage.getTotalElements()
 		);
+
 		return Response.of(pageResponse);
 	}
 

@@ -24,23 +24,27 @@ public class ScheduledSeatController {
 
 	// 좌석 예약 API
 	@PostMapping("v1/scheduled-seats")
-	public ResponseEntity<Response<String>> reserveSeat(@RequestBody ScheduledSeatRequestDTO requestDTO) {
-		return ResponseEntity.ok(
-			scheduledSeatService.reserveSeat(requestDTO.getScheduleId(), requestDTO.getSeatId(), 1L));
+	public ResponseEntity<Response<ScheduledSeatResponseDTO>> reserveSeat(
+		@RequestBody ScheduledSeatRequestDTO requestDTO) {
+		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.reserveSeat(requestDTO.getScheduleId(),
+			requestDTO.getSeatId(), 1L);
+		return ResponseEntity.ok(response);
 	}
 
 	// 예약 취소 API
 	@DeleteMapping("v1/scheduled-seat/{scheduleId}/{seatId}")
-	public ResponseEntity<Response<String>> cancelReservation(@RequestBody ScheduledSeatRequestDTO requestDTO) {
-		return ResponseEntity.ok(
-			scheduledSeatService.cancelReservation(requestDTO.getScheduleId(), requestDTO.getSeatId()));
+	public ResponseEntity<Response<ScheduledSeatResponseDTO>> cancelReservation(
+		@PathVariable Long scheduleId, @PathVariable Long seatId) {
+		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.cancelReservation(scheduleId, seatId);
+		return ResponseEntity.ok(response);
 	}
 
 	// 예약 상태 조회 API
 	@GetMapping("v1/scheduled-seats/{scheduleId}/{seatId}")
 	public ResponseEntity<Response<ScheduledSeatResponseDTO>> getReservation(@PathVariable Long scheduleId,
 		@PathVariable Long seatId) {
-		return ResponseEntity.ok(scheduledSeatService.getReservation(scheduleId, seatId));
+		Response<ScheduledSeatResponseDTO> response = scheduledSeatService.getReservation(scheduleId, seatId);
+		return ResponseEntity.ok(response);
 	}
 }
 

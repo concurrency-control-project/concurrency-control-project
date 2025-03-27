@@ -1,5 +1,7 @@
 package com.example.concurrencycontrolproject.domain.seat.dto.scheduledSeat;
 
+import com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat.ScheduledSeat;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,5 +17,13 @@ public class ScheduledSeatResponseDTO {
 	private Long seatId;
 	private Boolean isAssigned;
 	private Long reservedBy;
+
+	public ScheduledSeatResponseDTO(ScheduledSeat scheduledSeat) {
+		this.id = scheduledSeat.getId();
+		this.scheduleId = scheduledSeat.getScheduleId();
+		this.seatId = scheduledSeat.getSeatId();
+		this.isAssigned = scheduledSeat.getIsAssigned();
+		this.reservedBy = scheduledSeat.getReservedBy();
+	}
 }
 

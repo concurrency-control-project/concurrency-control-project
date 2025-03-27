@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.seat;
+package com.example.concurrencycontrolproject.seat.serviceTest;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
