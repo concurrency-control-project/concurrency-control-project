@@ -61,4 +61,13 @@ public class Ticket extends Timestamped {
 		}
 	}
 
+	// 좌석 변경
+	public void changeScheduleSeat(ScheduleSeat newScheduleSeat) {
+		if (newScheduleSeat == null) {
+			throw new IllegalArgumentException("새로운 좌석 정보가 올바르지 않습니다.");
+		}
+		this.scheduleSeat = newScheduleSeat;
+
+	}
+
 }

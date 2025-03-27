@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
+import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequestDto;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponseDto;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
@@ -66,10 +68,10 @@ public class TicketService {
 
 	// 티켓 생성
 	@Transactional
-	public TicketResponseDto saveTicket(Long userId, Long scheduleSeatId) {
+	public TicketResponseDto saveTicket(AuthUser authUser, Long scheduleSeatId) {
 
 		// 유저 검증
-		findUser(userId);
+		findUser(authUser.getId());
 
 		// 좌석 검증
 		ScheduleSeat scheduleSeat = findScheduleSeat(scheduleSeatId);
@@ -89,10 +91,10 @@ public class TicketService {
 
 	// 티켓 단건 조회
 	@Transactional(readOnly = true)
-	public TicketResponseDto getTicket(Long userId, Long ticketId) {
+	public TicketResponseDto getTicket(AuthUser authUser, Long ticketId) {
 
 		// 유저 검증
-		findUser(userId);
+		findUser(authUser.getId());
 
 		// 티켓 검증
 		Ticket ticket = findTicket(ticketId);
@@ -103,11 +105,11 @@ public class TicketService {
 	// 티켓 다건 조회
 	@Transactional(readOnly = true)
 	public Page<TicketResponseDto> getTickets(
-		Long userId, Pageable pageable, Long scheduleId, String ticketStatus,
+		AuthUser authUser, Pageable pageable, Long scheduleId, String ticketStatus,
 		LocalDateTime startedAt, LocalDateTime endedAt) {
 
 		// 유저 검증
-		findUser(userId);
+		findUser(authUser.getId());
 
 		// 페이지 -1
 		Pageable convertPageable = PageRequest.of(
@@ -116,16 +118,16 @@ public class TicketService {
 			pageable.getSort()
 		);
 
-		return ticketRepository.findTickets(userId, convertPageable, scheduleId, ticketStatus,
+		return ticketRepository.findTickets(authUser.getId(), convertPageable, scheduleId, ticketStatus,
 			startedAt, endedAt);
 
 	}
 
 	// 티켓 취소
-	public void deleteTicket(Long userId, Long ticketId) {
+	public void deleteTicket(AuthUser authUser, Long ticketId) {
 
 		// 유저 검증
-		findUser(userId);
+		findUser(authUser.getId());
 
 		// 티켓 검증
 		Ticket ticket = findTicket(ticketId);
@@ -135,6 +137,44 @@ public class TicketService {
 
 		// 삭제된 정보 DB에 저장
 		ticketRepository.save(ticket);
+	}
+
+	// 티켓 좌석 변경
+	public TicketResponseDto updateTicket(AuthUser authUser, Long ticketId, TicketChangeRequestDto requestDto) {
+		// 유저 검증
+		findUser(authUser.getId());
+
+		// 티켓 검증
+		Ticket ticket = findTicket(ticketId);
+
+		// 티켓 상태 검증
+		if (ticket.getStatus() != TicketStatus.RESERVED) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "좌석 변경할 수 없습니다.");
+		}
+
+		ScheduleSeat oldScheduleSeat = ticket.getScheduleSeat();
+		Long newScheduleSeatId = requestDto.getScheduleSeatId();
+
+		// 좌석 검증
+		ScheduleSeat newScheduleSeat = findScheduleSeat(newScheduleSeatId);
+
+		// 기존 좌석 반환
+		oldScheduleSeat.unassign();
+
+		// 새 좌석 예약
+		newScheduleSeat.assign();
+
+		// 좌석 변경
+		ticket.changeScheduleSeat(newScheduleSeat);
+
+		// 기존 좌석 정보 변경, 새 좌석 정보 변경 DB 저장
+		scheduleSeatRepository.save(oldScheduleSeat);
+		scheduleSeatRepository.save(newScheduleSeat);
+
+		// 티켓 저장
+		Ticket updatedTicket = ticketRepository.save(ticket);
+
+		return TicketResponseDto.ticketResponseDto(updatedTicket);
 	}
 
 	// 스케줄링 메서드
