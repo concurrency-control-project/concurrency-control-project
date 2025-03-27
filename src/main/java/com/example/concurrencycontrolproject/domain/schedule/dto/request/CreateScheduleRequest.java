@@ -16,5 +16,5 @@ public class CreateScheduleRequest {
 	private Long concertId;
 
 	@NotNull(message = "날짜 선택은 필수입니다.")
-	private LocalDateTime datetime;
+	private LocalDateTime dateTime;
 }

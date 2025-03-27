@@ -8,21 +8,27 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class UserScheduleResponse {
 
+	// 사용자에게는 ACTIVE 상태인 스케줄만 보이므로 Status 포함x
 	private final Long id;
 	private final Long concertId;
 	private final String concertTitle;
-	private final LocalDateTime datetime;
-	// 사용자에게는 ACTIVE 상태인 스케줄만 보이므로 Status 포함x
+	private final LocalDateTime dateTime;
+
+	private UserScheduleResponse(Long id, Long concertId, String concertTitle, LocalDateTime dateTime) {
+		this.id = id;
+		this.concertId = concertId;
+		this.concertTitle = concertTitle;
+		this.dateTime = dateTime;
+	}
 
 	public static UserScheduleResponse of(Schedule schedule) {
 		return new UserScheduleResponse(
 			schedule.getId(),
 			schedule.getConcert().getId(),
 			schedule.getConcert().getTitle(),
-			schedule.getDatetime()
+			schedule.getDateTime()
 		);
 	}
 }

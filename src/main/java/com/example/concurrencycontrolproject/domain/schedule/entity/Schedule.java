@@ -36,25 +36,25 @@ public class Schedule extends BaseTime {
 	@JoinColumn(name = "concert_id", nullable = false)
 	private Concert concert;
 
-	private LocalDateTime datetime;
+	private LocalDateTime dateTime;
 
 	@Enumerated(EnumType.STRING)
 	private ScheduleStatus status;
 
 	private LocalDateTime deletedAt;
 
-	public Schedule(Concert concert, LocalDateTime datetime, ScheduleStatus status) {
+	public Schedule(Concert concert, LocalDateTime dateTime, ScheduleStatus status) {
 		this.concert = concert;
-		this.datetime = datetime;
+		this.dateTime = dateTime;
 		this.status = status;
 	}
 
-	public static Schedule of(Concert concert, LocalDateTime datetime, ScheduleStatus status) {
-		return new Schedule(concert, datetime, status);
+	public static Schedule of(Concert concert, LocalDateTime dateTime, ScheduleStatus status) {
+		return new Schedule(concert, dateTime, status);
 	}
 
-	public void updateDateTime(LocalDateTime datetime) {
-		this.datetime = datetime;
+	public void updateDateTime(LocalDateTime dateTime) {
+		this.dateTime = dateTime;
 	}
 
 	public void updateStatus(ScheduleStatus status) {
