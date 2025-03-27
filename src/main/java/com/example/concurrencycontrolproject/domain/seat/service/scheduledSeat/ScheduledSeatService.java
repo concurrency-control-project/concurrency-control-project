@@ -25,7 +25,7 @@ public class ScheduledSeatService {
 	private final ScheduledSeatRepository scheduledSeatRepository;
 
 	// 좌석 예약
-	public Response<String> reserveSeat(Long scheduleId, Long seatId, Long userId) {
+	public Response<ScheduledSeatResponseDTO> reserveSeat(Long scheduleId, Long seatId, Long userId) {
 		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 		List<String> keys = Collections.singletonList(redisKey);
 
@@ -37,20 +37,26 @@ public class ScheduledSeatService {
 
 		ScheduledSeat scheduledSeat = new ScheduledSeat(redisKey, scheduleId, seatId, true, userId);
 		scheduledSeatRepository.save(scheduledSeat);
-		return Response.of("좌석 예약 성공!");
+		return Response.of(new ScheduledSeatResponseDTO(scheduledSeat));
 	}
 
 	// 예약 취소
-	public Response<String> cancelReservation(Long scheduleId, Long seatId) {
+	public Response<ScheduledSeatResponseDTO> cancelReservation(Long scheduleId, Long seatId) {
 		String redisKey = "scheduled_seat:" + scheduleId + ":" + seatId;
 
 		if (!scheduledSeatRepository.existsById(redisKey)) {
 			throw new ScheduledSeatException(ScheduledSeatErrorCode.SEAT_NOT_FOUND);
 		}
 
+		ScheduledSeat scheduledSeat = scheduledSeatRepository.findById(redisKey)
+			.orElseThrow(() -> new ScheduledSeatException(ScheduledSeatErrorCode.SEAT_NOT_FOUND));
+
 		scheduledSeatRepository.deleteById(redisKey);
 		redisTemplate.delete(redisKey);
-		return Response.of("좌석 예약 취소 완료!");
+
+		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(scheduledSeat);
+
+		return Response.of(responseDTO);
 	}
 
 	// 예약 상태 조회
@@ -60,11 +66,7 @@ public class ScheduledSeatService {
 		ScheduledSeat reservation = scheduledSeatRepository.findById(redisKey)
 			.orElseThrow(() -> new ScheduledSeatException(ScheduledSeatErrorCode.SEAT_NOT_FOUND));
 
-		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(
-			reservation.getId(), reservation.getScheduleId(), reservation.getSeatId(), reservation.getIsAssigned(),
-			reservation.getReservedBy()
-		);
-
+		ScheduledSeatResponseDTO responseDTO = new ScheduledSeatResponseDTO(reservation);
 		return Response.of(responseDTO);
 	}
 }
