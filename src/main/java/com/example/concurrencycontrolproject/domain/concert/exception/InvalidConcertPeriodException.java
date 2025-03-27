@@ -1,8 +1,8 @@
 package com.example.concurrencycontrolproject.domain.concert.exception;
 
-import com.example.concurrencycontrolproject.domain.common.exception.CustomException;
+import com.example.concurrencycontrolproject.domain.common.exception.ConcertException;
 
-public class InvalidConcertPeriodException extends CustomException {
+public class InvalidConcertPeriodException extends ConcertException {
 	public InvalidConcertPeriodException() {
 		super(ConcertErrorCode.INVALID_CONCERT_PERIOD);
 	}

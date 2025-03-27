@@ -1,8 +1,8 @@
 package com.example.concurrencycontrolproject.domain.concert.exception;
 
-import com.example.concurrencycontrolproject.domain.common.exception.CustomException;
+import com.example.concurrencycontrolproject.domain.common.exception.ConcertException;
 
-public class ConcertNotFoundException extends CustomException {
+public class ConcertNotFoundException extends ConcertException {
 
 	public ConcertNotFoundException() {
 		super(ConcertErrorCode.CONCERT_NOT_FOUND);

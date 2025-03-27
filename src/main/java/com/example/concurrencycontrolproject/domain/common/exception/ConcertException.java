@@ -5,19 +5,19 @@ import org.springframework.http.HttpStatus;
 import lombok.Getter;
 
 @Getter
-public class CustomException extends RuntimeException {
+public class ConcertException extends RuntimeException {
 	private final HttpStatus status;
 	private final String errorCode;
 	private final String message;
 
-	public CustomException(ErrorCode errorCode) {
+	public ConcertException(ErrorCode errorCode) {
 		super(errorCode.getDefaultMessage());
 		this.status = errorCode.getHttpStatus();
 		this.errorCode = errorCode.getCode();
 		this.message = errorCode.getDefaultMessage();
 	}
 
-	public CustomException(ErrorCode errorCode, String message) {
+	public ConcertException(ErrorCode errorCode, String message) {
 		super(message);
 		this.status = errorCode.getHttpStatus();
 		this.errorCode = errorCode.getCode();
