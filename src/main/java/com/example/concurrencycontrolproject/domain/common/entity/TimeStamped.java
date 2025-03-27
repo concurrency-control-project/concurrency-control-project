@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.user.entity;
+package com.example.concurrencycontrolproject.domain.common.entity;
 
 import java.time.LocalDateTime;
 
