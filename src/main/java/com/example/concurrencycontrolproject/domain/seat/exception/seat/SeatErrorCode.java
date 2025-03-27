@@ -4,10 +4,8 @@ import org.springframework.http.HttpStatus;
 
 import com.example.concurrencycontrolproject.domain.common.exception.ErrorCode;
 
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
 @RequiredArgsConstructor
 public enum SeatErrorCode implements ErrorCode {
 	INVALID_SEAT_DATA(HttpStatus.BAD_REQUEST, "INVALID_SEAT_DATA", "유효하지 않은 좌석 정보입니다."),

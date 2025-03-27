@@ -4,18 +4,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Table(name = "seat")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Seat {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +26,17 @@ public class Seat {
 		this.grade = grade;
 		this.price = price;
 		this.section = section;
+	}
+
+	private Seat(int number, String grade, int price, String section) {  // 🔥 private 생성자 유지
+		this.number = number;
+		this.grade = grade;
+		this.price = price;
+		this.section = section;
+	}
+
+	public static Seat of(int number, String grade, int price, String section) {
+		return new Seat(number, grade, price, section);
 	}
 }
 
