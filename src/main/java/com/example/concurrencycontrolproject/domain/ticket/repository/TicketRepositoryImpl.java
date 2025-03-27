@@ -1,7 +1,7 @@
 package com.example.concurrencycontrolproject.domain.ticket.repository;
 
 import static com.example.concurrencycontrolproject.domain.scheduleSeat.entity.QScheduleSeat.*;
-import static com.example.concurrencycontrolproject.domain.seat.entity.QSeat.*;
+import static com.example.concurrencycontrolproject.domain.seat.entity.seat.QSeat.*;
 import static com.example.concurrencycontrolproject.domain.ticket.entity.QTicket.*;
 import static com.example.concurrencycontrolproject.domain.userTicket.entity.QUserTicket.*;
 
@@ -12,7 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponse;
+import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponse;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.QTicket;
 import com.example.concurrencycontrolproject.domain.user.entity.QUser;

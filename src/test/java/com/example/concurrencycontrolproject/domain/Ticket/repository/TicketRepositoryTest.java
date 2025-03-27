@@ -1,5 +1,6 @@
 package com.example.concurrencycontrolproject.domain.Ticket.repository;
 
+import static com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 import java.util.Objects;
@@ -15,17 +16,17 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.example.concurrencycontrolproject.config.QueryDslConfig;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 import com.example.concurrencycontrolproject.domain.ticket.repository.TicketRepository;
 import com.example.concurrencycontrolproject.domain.ticket.service.TicketService;
-import com.example.concurrencycontrolproject.global.config.JPAConfiguration;
 
 @DataJpaTest
-@Import(JPAConfiguration.class)
+@Import(QueryDslConfig.class)
 public class TicketRepositoryTest {
 
 	@Autowired
@@ -45,7 +46,7 @@ public class TicketRepositoryTest {
 	// 테스트용 좌석 생성 메서드
 	private Seat createSeat(Integer number, String grade, Integer price, String section) {
 
-		Seat seat = new Seat();
+		Seat seat = of(1, "A석", 10000, "A열");
 		ReflectionTestUtils.setField(seat, "number", number);
 		ReflectionTestUtils.setField(seat, "grade", grade);
 		ReflectionTestUtils.setField(seat, "price", price);
