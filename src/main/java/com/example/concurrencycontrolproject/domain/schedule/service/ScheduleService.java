@@ -9,7 +9,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
+import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.schedule.dto.request.CreateScheduleRequest;
 import com.example.concurrencycontrolproject.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.example.concurrencycontrolproject.domain.schedule.dto.request.UpdateScheduleStatusRequest;
@@ -17,9 +19,10 @@ import com.example.concurrencycontrolproject.domain.schedule.dto.response.AdminS
 import com.example.concurrencycontrolproject.domain.schedule.dto.response.UserScheduleResponse;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
+import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleErrorCode;
+import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleException;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -95,7 +98,7 @@ public class ScheduleService {
 		Schedule schedule = findScheduleByConcertIdAndId(concertId, scheduleId);
 
 		if (request.getStatus() == ScheduleStatus.DELETED) {
-			throw new IllegalArgumentException("DELETED 상태는 상태 수정 API를 통해 변경할 수 없습니다.");
+			throw new ScheduleException(ScheduleErrorCode.CANNOT_CHANGE_DELETED_STATUS);
 		}
 
 		schedule.updateStatus(request.getStatus());
@@ -113,11 +116,11 @@ public class ScheduleService {
 	// 검증 로직
 	private Concert findConcertById(Long concertId) {
 		return concertRepository.findById(concertId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 공연을 찾을 수 없습니다."));
+			.orElseThrow(() -> new ScheduleException(ScheduleErrorCode.CONCERT_NOT_FOUND));
 	}
 
 	private Schedule findScheduleByConcertIdAndId(Long concertId, Long scheduleId) {
 		return scheduleRepository.findByIdAndConcertId(concertId, scheduleId)
-			.orElseThrow(() -> new EntityNotFoundException("해당 스케줄을 찾을 수 없습니다."));
+			.orElseThrow(() -> new ScheduleException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
 	}
 }

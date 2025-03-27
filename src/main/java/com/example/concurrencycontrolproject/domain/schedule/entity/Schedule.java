@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
+import com.example.concurrencycontrolproject.domain.schedule.basetime.BaseTime;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 
 import jakarta.persistence.Entity;
