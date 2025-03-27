@@ -3,7 +3,7 @@ package com.example.concurrencycontrolproject.domain.ticket.repository;
 import static com.example.concurrencycontrolproject.domain.scheduleSeat.entity.QScheduleSeat.*;
 import static com.example.concurrencycontrolproject.domain.seat.entity.QSeat.*;
 import static com.example.concurrencycontrolproject.domain.ticket.entity.QTicket.*;
-import static com.example.concurrencycontrolproject.domain.user.entity.QUser.*;
+import static com.example.concurrencycontrolproject.domain.userTicket.entity.QUserTicket.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,9 +12,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
-import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponseDto;
+import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponse;
+import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.QTicket;
+import com.example.concurrencycontrolproject.domain.user.entity.QUser;
+import com.example.concurrencycontrolproject.domain.userTicket.entity.QUserTicket;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -27,19 +29,21 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public Page<TicketResponseDto> findTickets(Long userId, Pageable pageable, Long scheduleId,
+	public Page<TicketResponse> findTickets(Long userId, Pageable pageable, Long scheduleId,
 		String ticketStatus, LocalDateTime startedAt, LocalDateTime endedAt) {
 
 		QTicket ticket = QTicket.ticket;
+		QUserTicket userTicket = QUserTicket.userTicket;
+		QUser user = QUser.user;
 
-		List<TicketResponseDto> list = queryFactory
-			.select(Projections.constructor(TicketResponseDto.class,
+		List<TicketResponse> list = queryFactory
+			.select(Projections.constructor(TicketResponse.class,
 					ticket.id,
 					ticket.scheduleSeat.schedule.id,
 					ticket.status,
 					ticket.createdAt,
 					ticket.modifiedAt,
-					Projections.constructor(SeatResponseDto.class,
+					Projections.constructor(SeatResponse.class,
 						ticket.scheduleSeat.seat.id,
 						ticket.scheduleSeat.seat.number,
 						ticket.scheduleSeat.seat.grade,
@@ -49,6 +53,8 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 				)
 			)
 			.from(ticket)
+			.join(userTicket).on(userTicket.ticket.id.eq(ticket.id))
+			.join(userTicket.user, user)
 			.join(ticket.scheduleSeat, scheduleSeat)
 			.join(scheduleSeat.seat, seat)
 			.where(
@@ -65,7 +71,10 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 		Long count = queryFactory
 			.select(ticket.count())
 			.from(ticket)
+			.join(userTicket).on(userTicket.ticket.id.eq(ticket.id))
+			.join(userTicket.user, user)
 			.join(ticket.scheduleSeat, scheduleSeat)
+			.join(scheduleSeat.seat, seat)
 			.where(
 				userIdEq(userId),
 				scheduleIdEq(scheduleId),
@@ -78,7 +87,7 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 	}
 
 	private BooleanExpression userIdEq(Long userId) {
-		return userId != null ? user.id.eq(userId) : null;
+		return userId != null ? userTicket.user.id.eq(userId) : null;
 	}
 
 	private BooleanExpression scheduleIdEq(Long scheduleId) {

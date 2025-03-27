@@ -4,7 +4,6 @@ import static org.springframework.data.domain.Sort.Direction.*;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
-import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequestDto;
-import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponseDto;
+import com.example.concurrencycontrolproject.domain.common.response.Response;
+import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequest;
+import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.service.TicketService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,26 +37,26 @@ public class TicketController {
 
 	// 티켓 생성
 	@PostMapping("/v1/schedule-seats/{scheduleSeatId}/tickets")
-	public ResponseEntity<TicketResponseDto> saveTicket(
+	public Response<TicketResponse> saveTicket(
 		@AuthenticationPrincipal AuthUser authUser,
 		@PathVariable Long scheduleSeatId
 	) {
 
-		return ResponseEntity.ok(ticketService.saveTicket(authUser, scheduleSeatId));
+		return Response.of(ticketService.saveTicket(authUser, scheduleSeatId));
 	}
 
 	// 티켓 단건 조회
 	@GetMapping("/v1/tickets/{ticketId}")
-	public ResponseEntity<TicketResponseDto> getTicket(
+	public Response<TicketResponse> getTicket(
 		@AuthenticationPrincipal AuthUser authUser,
 		@PathVariable Long ticketId
 	) {
-		return ResponseEntity.ok(ticketService.getTicket(authUser, ticketId));
+		return Response.of(ticketService.getTicket(authUser, ticketId));
 	}
 
 	// 티켓 다건 조회
 	@GetMapping("/v1/tickets")
-	public ResponseEntity<Page<TicketResponseDto>> getTickets(
+	public Response<TicketResponse> getTickets(
 		@AuthenticationPrincipal AuthUser authUser,
 		@PageableDefault(page = 1, size = 10, sort = "createdAt", direction = DESC) Pageable pageable,
 		@RequestParam(required = false) Long scheduleId,
@@ -64,26 +65,26 @@ public class TicketController {
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDateTime endedAt
 	) {
 
-		return ResponseEntity.ok(
+		return Response.fromPage(
 			ticketService.getTickets(authUser, pageable, scheduleId, ticketStatus, startedAt,
 				endedAt));
 	}
 
 	// 티켓 취소(환불)
 	@DeleteMapping("/v1/tickets/{ticketId}")
-	public ResponseEntity<Void> deleteTicket(
+	public Response<Void> deleteTicket(
 		@AuthenticationPrincipal AuthUser authUser,
 		@PathVariable Long ticketId
 	) {
 		ticketService.deleteTicket(authUser, ticketId);
-		return ResponseEntity.ok().build();
+		return Response.empty();
 	}
 
 	// 좌석 변경
 	@PutMapping("/v1/tickets/{ticketId}")
-	public ResponseEntity<TicketResponseDto> updateTicket(
+	public ResponseEntity<TicketResponse> updateTicket(
 		@AuthenticationPrincipal AuthUser authUser,
-		@RequestBody TicketChangeRequestDto requestDto,
+		@Valid @RequestBody TicketChangeRequest requestDto,
 		@PathVariable Long ticketId
 	) {
 		return ResponseEntity.ok(ticketService.updateTicket(authUser, ticketId, requestDto));
