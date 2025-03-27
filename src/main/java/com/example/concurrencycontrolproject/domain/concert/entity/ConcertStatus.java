@@ -9,8 +9,7 @@ public enum ConcertStatus {
 
 	PLANNED("예정"),
 	BOOKING_OPEN("예매 중"),
-	CLOSED("판매 종료"),
-	CANCELLED("공연 취소"),
+	PERFORMING("공연 중"),
 	FINISHED("공연 종료"),
 	DELETED("삭제된 공연");
 
