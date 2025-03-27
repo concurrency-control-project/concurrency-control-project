@@ -25,7 +25,7 @@ class RedisCacheUtilTest {
 	private RefreshTokenRepository refreshTokenRepository;
 
 	@InjectMocks
-	private RedisCacheUtil redisCacheUtil;
+	private RefreshCacheUtil redisCacheUtil;
 
 	RefreshToken refreshToken;
 	String token = "token";

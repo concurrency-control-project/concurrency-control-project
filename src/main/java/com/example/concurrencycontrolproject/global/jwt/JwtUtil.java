@@ -13,7 +13,7 @@ import com.example.concurrencycontrolproject.domain.auth.exception.TokenNotFound
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
-import com.example.concurrencycontrolproject.global.redis.RedisCacheUtil;
+import com.example.concurrencycontrolproject.global.redis.RefreshCacheUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class JwtUtil {
 
-	private final RedisCacheUtil redisCache;
+	private final RefreshCacheUtil redisCache;
 	private final UserRepository userRepository;
 
 	private static final String BEARER_PREFIX = "Bearer ";
