@@ -10,4 +10,5 @@ import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 public interface TicketRepository extends JpaRepository<Ticket, Long>, TicketRepositoryCustom {
 
 	List<Ticket> findTicketsByStatus(TicketStatus status);
+
 }

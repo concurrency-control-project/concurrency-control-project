@@ -16,7 +16,7 @@ import lombok.Getter;
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class Timestamped {
+public abstract class TimeStamped {
 	@CreatedDate
 	@Column(updatable = false)
 	@Temporal(TemporalType.TIMESTAMP)

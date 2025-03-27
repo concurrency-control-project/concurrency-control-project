@@ -1,5 +1,6 @@
 package com.example.concurrencycontrolproject.domain.Ticket.entity;
 
+import static com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 import com.example.concurrencycontrolproject.domain.ticket.exception.TicketException;
@@ -24,7 +25,7 @@ public class TicketTest {
 		Schedule mockSchedule = new Schedule();
 
 		// 테스트용 Seat 객체
-		Seat mockSeat = new Seat();
+		Seat mockSeat = of(1, "A석", 10000, "A열");
 
 		ScheduleSeat mockScheduleSeat = new ScheduleSeat();
 		ReflectionTestUtils.setField(mockScheduleSeat, "id", scheduleSeatId);

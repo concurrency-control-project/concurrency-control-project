@@ -1,5 +1,6 @@
 package com.example.concurrencycontrolproject.domain.Ticket.service;
 
+import static com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,7 +21,7 @@ import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
 import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequest;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
@@ -70,7 +71,7 @@ public class TicketServiceTest {
 	// 테스트용 좌석 생성 메서드
 	private Seat createSeat(Integer number, String grade, Integer price, String section) {
 
-		Seat seat = new Seat();
+		Seat seat = of(1, "A석", 10000, "A열");
 		ReflectionTestUtils.setField(seat, "number", number);
 		ReflectionTestUtils.setField(seat, "grade", grade);
 		ReflectionTestUtils.setField(seat, "price", price);

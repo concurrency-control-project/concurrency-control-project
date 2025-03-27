@@ -1,10 +1,8 @@
 package com.example.concurrencycontrolproject.domain.concert.entity;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
 public enum ConcertStatus {
 
 	PLANNED("예정"),
@@ -14,5 +12,9 @@ public enum ConcertStatus {
 	DELETED("삭제된 공연");
 
 	private final String description;
+
+	private ConcertStatus(String displayName) {
+		this.description = displayName;
+	}
 
 }
