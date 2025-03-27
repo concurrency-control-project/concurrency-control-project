@@ -20,6 +20,7 @@ public class ConcertStatusScheduler {
 	@Scheduled(cron = "0 */15 * * * *")
 	public void updateConcertsStatus() {
 		try {
+			log.info("콘서트 상태 갱신 스케줄러 실행");
 			concertStatusSchedulerService.updateConcertsStatus(LocalDateTime.now());
 		} catch (Exception e) {
 			log.error("콘서트 상태 갱신 중 에러 발생", e);
