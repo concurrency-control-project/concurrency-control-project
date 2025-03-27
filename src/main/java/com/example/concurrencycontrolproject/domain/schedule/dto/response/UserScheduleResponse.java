@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
