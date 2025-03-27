@@ -1,8 +1,8 @@
 package com.example.concurrencycontrolproject.domain.scheduleSeat.entity;
 
-import com.example.concurrencycontrolproject.domain.common.entity.Timestamped;
+import com.example.concurrencycontrolproject.domain.common.entity.TimeStamped;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
-import com.example.concurrencycontrolproject.domain.seat.entity.Seat;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,7 +15,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-public class ScheduleSeat extends Timestamped {
+public class ScheduleSeat extends TimeStamped {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +33,10 @@ public class ScheduleSeat extends Timestamped {
 
 	public void assign() {
 		this.isAssigned = true;
+	}
+
+	public void unassign() {
+		this.isAssigned = false;
 	}
 
 }

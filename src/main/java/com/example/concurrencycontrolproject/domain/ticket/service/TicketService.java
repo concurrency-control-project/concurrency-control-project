@@ -45,8 +45,10 @@ public class TicketService {
 				() -> new TicketException(TicketErrorCode.USER_NOT_FOUND));
 	}
 
+	// Todo 스케줄시트id로 티켓 찾아서 그거 상태 변환 체크하고 좌석 검증하기
 	// 좌석 검증
 	private ScheduleSeat findScheduleSeat(Long scheduleSeatId) {
+
 		return scheduleSeatRepository.findByIdAndAssignedIsFalse(scheduleSeatId)
 			.orElseThrow(
 				() -> new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST));

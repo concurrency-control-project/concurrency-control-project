@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.concurrencycontrolproject.domain.common.response.ErrorResponse;
 import com.example.concurrencycontrolproject.domain.common.response.ValidResponse;
+import com.example.concurrencycontrolproject.domain.seat.exception.scheduledSeat.ScheduledSeatException;
+import com.example.concurrencycontrolproject.domain.seat.exception.seat.SeatException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,5 +47,27 @@ public class GlobalExceptionHandler {
 		log.error("Exception : {}", e.getMessage(), e);
 		return ErrorResponse.of("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
 	}
+
+	@ExceptionHandler(SeatException.class)
+	public ResponseEntity<ErrorResponse> handleSeatException(SeatException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ErrorResponse.of(e.getStatus().toString(), e.getMessage()));
+	}
+
+	@ExceptionHandler(ScheduledSeatException.class)
+	public ResponseEntity<ErrorResponse> handleScheduledSeatException(ScheduledSeatException e) {
+		return ResponseEntity.status(e.getStatus())
+			.body(ErrorResponse.of(e.getStatus().toString(), e.getMessage()));
+	}
+
+	// Todo 충돌 주석
+	// @ExceptionHandler(MethodArgumentNotValidException.class)
+	// public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
+	// 	Map<String, String> errors = new HashMap<>();
+	// 	ex.getBindingResult().getFieldErrors()
+	// 		.forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+	//
+	// 	return ResponseEntity.badRequest().body(errors);
+	// }
 
 }

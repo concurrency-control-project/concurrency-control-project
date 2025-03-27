@@ -1,6 +1,6 @@
 package com.example.concurrencycontrolproject.domain.ticket.entity;
 
-import com.example.concurrencycontrolproject.domain.common.entity.Timestamped;
+import com.example.concurrencycontrolproject.domain.common.entity.TimeStamped;
 import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
 import com.example.concurrencycontrolproject.domain.ticket.exception.TicketErrorCode;
 import com.example.concurrencycontrolproject.domain.ticket.exception.TicketException;
@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Ticket extends Timestamped {
+public class Ticket extends TimeStamped {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +36,8 @@ public class Ticket extends Timestamped {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "schedule_seat_id", nullable = false)
 	private ScheduleSeat scheduleSeat;
+
+	// private ScheduledSeat scheduledSeat;
 
 	@Enumerated(EnumType.STRING)
 	private TicketStatus status;
