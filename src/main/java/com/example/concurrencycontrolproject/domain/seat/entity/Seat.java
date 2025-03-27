@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.domain.schedule.entity;
+package com.example.concurrencycontrolproject.domain.seat.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,10 +8,14 @@ import lombok.Getter;
 
 @Entity
 @Getter
-public class Schedule {
+public class Seat {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String status;
+	private Integer number;
+	private String grade;
+	private Integer price;
+	private String section;
 }
