@@ -2,11 +2,10 @@ package com.example.concurrencycontrolproject.domain.schedule.entity;
 
 import static lombok.AccessLevel.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.example.concurrencycontrolproject.domain.common.entity.TimeStamped;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
-import com.example.concurrencycontrolproject.domain.schedule.basetime.BaseTime;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 
 import jakarta.persistence.Entity;
@@ -26,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = PROTECTED)
 @Table(name = "schedules")
-public class Schedule extends BaseTime {
+public class Schedule extends TimeStamped {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
