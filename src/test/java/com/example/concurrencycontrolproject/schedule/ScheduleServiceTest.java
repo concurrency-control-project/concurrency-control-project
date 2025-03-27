@@ -64,7 +64,7 @@ class ScheduleServiceTest {
 		// then: 결과 검증
 		assertThat(response).isNotNull();
 		assertThat(response.getConcertId()).isEqualTo(concert.getId());
-		assertThat(response.getDatetime()).isEqualTo(dateTime);
+		assertThat(response.getDateTime()).isEqualTo(dateTime);
 		assertThat(response.getStatus()).isEqualTo(ScheduleStatus.ACTIVE);
 	}
 
@@ -119,7 +119,7 @@ class ScheduleServiceTest {
 		AdminScheduleResponse response = scheduleService.updateSchedule(null, concert.getId(), schedule.getId(), request);
 
 		// then: 수정된 시간 검증
-		assertThat(response.getDatetime()).isEqualTo(updatedTime);
+		assertThat(response.getDateTime()).isEqualTo(updatedTime);
 	}
 
 	@Test

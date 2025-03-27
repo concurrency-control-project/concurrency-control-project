@@ -16,7 +16,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
 	// 관리자에게 모든 상태 노출, datetime에서 날짜만 추출하여 조회
 	@EntityGraph(attributePaths = "concert")
-	@Query("SELECT s FROM Schedule s WHERE s.concert.id = :concertId AND DATE(s.datetime) = :date")
+	@Query("SELECT s FROM Schedule s WHERE s.concert.id = :concertId AND s.dateTime >= :date AND s.dateTime < :date + 1")
 	Page<Schedule> findByConcertIdAndDatetime(
 		@Param("concertId") Long concertId,
 		@Param("date") LocalDate date,
@@ -25,7 +25,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
 	// 사용자에게 ACTIVE 상태만 노출, datetime에서 날짜만 추출하여 조회
 	@EntityGraph(attributePaths = "concert")
-	@Query("SELECT s FROM Schedule s WHERE s.concert.id = :concertId AND DATE(s.datetime) = :date AND s.status = 'ACTIVE'")
+	@Query("SELECT s FROM Schedule s WHERE s.concert.id = :concertId AND s.dateTime >= :date AND s.dateTime < :date + 1 AND s.status = 'ACTIVE'")
 	Page<Schedule> findActiveByConcertIdAndDatetime(
 		@Param("concertId") Long concertId,
 		@Param("date") LocalDate date,
