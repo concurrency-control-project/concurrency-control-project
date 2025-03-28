@@ -14,9 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.concurrencycontrolproject.domain.auth.exception.AuthenticationExpiredException;
-import com.example.concurrencycontrolproject.domain.token.entity.RefreshToken;
-import com.example.concurrencycontrolproject.domain.token.repository.RefreshTokenRepository;
+import com.example.concurrencycontrolproject.authentication.jwt.token.RefreshToken;
+import com.example.concurrencycontrolproject.authentication.exception.AuthenticationExpiredException;
+import com.example.concurrencycontrolproject.authentication.jwt.repository.RefreshTokenRepository;
+import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshTokenService;
 
 @ExtendWith(MockitoExtension.class)
 class RedisCacheUtilTest {
@@ -25,7 +26,7 @@ class RedisCacheUtilTest {
 	private RefreshTokenRepository refreshTokenRepository;
 
 	@InjectMocks
-	private RefreshCacheUtil redisCacheUtil;
+	private RefreshTokenService redisCacheUtil;
 
 	RefreshToken refreshToken;
 	String token = "token";
