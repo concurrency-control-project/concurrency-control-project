@@ -20,6 +20,7 @@ import com.example.concurrencycontrolproject.domain.schedule.dto.request.CreateS
 import com.example.concurrencycontrolproject.domain.schedule.dto.request.UpdateScheduleRequest;
 import com.example.concurrencycontrolproject.domain.schedule.dto.request.UpdateScheduleStatusRequest;
 import com.example.concurrencycontrolproject.domain.schedule.dto.response.AdminScheduleResponse;
+import com.example.concurrencycontrolproject.domain.schedule.dto.response.SchedulePageResult;
 import com.example.concurrencycontrolproject.domain.schedule.dto.response.UserScheduleResponse;
 import com.example.concurrencycontrolproject.domain.schedule.service.ScheduleService;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
@@ -47,17 +48,25 @@ public class ScheduleController {
 
 	// 공연 스케줄 다건 조회 (관리자)
 	@Secured(UserRole.Authority.ADMIN)
-	@GetMapping("/v1/admin/concerts/{concertId}/schedules") // 사용자 다건 조회 엔드포인트와 경로 충돌을 방지하기 위해 /admin 경로 추가
-	public Response<AdminScheduleResponse> getAdminSchedules(
+	@GetMapping("/v1/admin/concerts/{concertId}/schedules")
+	public Response<SchedulePageResult> getAdminSchedules(
 		@AuthenticationPrincipal AuthUser authUser,
 		@PathVariable Long concertId,
 		@RequestParam LocalDate date,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size
 	) {
-		Page<AdminScheduleResponse> schedules = scheduleService.getAdminSchedules(authUser, concertId, date, page,
-			size);
-		return Response.fromPage(schedules);
+		Page<AdminScheduleResponse> schedules = scheduleService.getAdminSchedules(authUser, concertId, date, page, size);
+
+		SchedulePageResult result = new SchedulePageResult(
+			schedules.getContent(),
+			schedules.getNumber(),
+			schedules.getSize(),
+			schedules.getTotalPages(),
+			schedules.getTotalElements()
+		);
+
+		return Response.of(result);
 	}
 
 	// 공연 스케줄 다건 조회 (사용자)
