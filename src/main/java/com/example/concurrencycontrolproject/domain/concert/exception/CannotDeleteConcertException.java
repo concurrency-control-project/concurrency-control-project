@@ -12,3 +12,4 @@ public class CannotDeleteConcertException extends ConcertException {
 		super(ConcertErrorCode.CANNOT_DELETE_CONCERT, message);
 	}
 }
+

@@ -5,3 +5,4 @@ public class EmailNotFoundException extends UserException {
 		super(UserErrorCode.EMAIL_NOT_FOUND);
 	}
 }
+
