@@ -19,7 +19,13 @@ public enum TicketErrorCode implements ErrorCode {
 	TICKET_ACCESS_DENIED(HttpStatus.FORBIDDEN,
 		"TICKET_ACCESS_DENIED", "구매하신 티켓이 아닙니다."),
 	TICKET_OWNER_MAPPING_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR,
-		"TICKET_OWNER_MAPPING_NOT_FOUND", "구매하신 티켓을 찾을 수 없습니다.");
+		"TICKET_OWNER_MAPPING_NOT_FOUND", "구매하신 티켓을 찾을 수 없습니다."),
+	SEAT_NOT_FOUND(HttpStatus.NOT_FOUND,
+		"SEAT_ID_NOT_FOUND", "시트를 찾을 수 없습니다."),
+	SCHEDULE_ID_NOT_FOUND(HttpStatus.NOT_FOUND,
+		"SCHEDULE_ID_NOT_FOUND", "스케줄 ID를 찾을 수 없습니다."),
+	SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND,
+		"SCHEDULE_NOT_FOUND", "스케줄을 찾을 수 없습니다.");
 
 	private final HttpStatus status;
 	private final String code;

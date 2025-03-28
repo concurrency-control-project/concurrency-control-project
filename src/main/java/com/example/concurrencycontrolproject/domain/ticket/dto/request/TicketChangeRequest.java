@@ -9,5 +9,5 @@ import lombok.Getter;
 public class TicketChangeRequest {
 
 	@NotNull(message = "변경할 좌석을 입력해주세요.")
-	private Long scheduleSeatId;
+	private Long seatId;
 }

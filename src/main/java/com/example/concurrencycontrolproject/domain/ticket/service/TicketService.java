@@ -12,8 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
-import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
-import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
+import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
+import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
+import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
+import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
+import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
+import com.example.concurrencycontrolproject.domain.seat.repository.scheduledSeat.ScheduledSeatRepository;
+import com.example.concurrencycontrolproject.domain.seat.repository.seat.SeatRepository;
 import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequest;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
@@ -35,8 +40,10 @@ public class TicketService {
 
 	private final TicketRepository ticketRepository;
 	private final UserRepository userRepository;
-	private final ScheduleSeatRepository scheduleSeatRepository;
 	private final UserTicketRepository userTicketRepository;
+	private final ScheduledSeatRepository scheduledSeatRepository;
+	private final ScheduleRepository scheduleRepository;
+	private final SeatRepository seatRepository;
 
 	// 유저 검증
 	private User findUser(Long userId) {
@@ -45,13 +52,32 @@ public class TicketService {
 				() -> new TicketException(TicketErrorCode.USER_NOT_FOUND));
 	}
 
-	// Todo 스케줄시트id로 티켓 찾아서 그거 상태 변환 체크하고 좌석 검증하기
-	// 좌석 검증
-	private ScheduleSeat findScheduleSeat(Long scheduleSeatId) {
+	// 중복 예매 검증
+	private void validateScheduleAndSeat(Long scheduleId, Long seatId) {
 
-		return scheduleSeatRepository.findByIdAndAssignedIsFalse(scheduleSeatId)
+		// 스케줄 조회
+		scheduleRepository.findById(scheduleId)
+			.filter(s -> s.getStatus() == ScheduleStatus.ACTIVE)
+			.orElseThrow(() -> new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST));
+
+		// 좌석 존재 검증
+		if (!seatRepository.existsById(seatId)) {
+			throw new TicketException(TicketErrorCode.SEAT_NOT_FOUND);
+		}
+
+		// 중복 예매 확인
+		boolean isUnavailable = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(
+			scheduleId, seatId, List.of(TicketStatus.RESERVED));
+		if (isUnavailable) {
+			throw new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
+		}
+	}
+
+	// 좌석 검증
+	private void findSeat(Long seatId) {
+		seatRepository.findById(seatId)
 			.orElseThrow(
-				() -> new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST));
+				() -> new TicketException(TicketErrorCode.SEAT_NOT_FOUND));
 	}
 
 	// 티켓 검증
@@ -79,33 +105,45 @@ public class TicketService {
 		return userTicket;
 	}
 
+	// seatResponseDto 생성
+	private SeatResponseDto findSeatResponseDto(Long seatId) {
+
+		Seat seat = seatRepository.findById(seatId)
+			.orElseThrow(
+				() -> new TicketException(TicketErrorCode.SEAT_NOT_FOUND));
+
+		return SeatResponseDto.builder()
+			.id(seat.getId())
+			.number(seat.getNumber())
+			.price(seat.getPrice())
+			.grade(seat.getGrade())
+			.section(seat.getSection())
+			.build();
+	}
+
 	// 티켓 생성
 	@Transactional
-	@DistributedLock(keyPrefix = "scheduleSeatId", keySuffixExpression = "#scheduleSeatId")
-	public TicketResponse saveTicket(AuthUser authUser, Long scheduleSeatId) {
+	@DistributedLock(keyPrefix = "scheduleIdSeatId", keySuffixExpression = "#scheduleId + '-' + #seatId")
+	public TicketResponse saveTicket(AuthUser authUser, Long scheduleId, Long seatId) {
 
 		// 유저 검증
 		User user = findUser(authUser.getId());
 
-		// 좌석 검증
-		ScheduleSeat scheduleSeat = findScheduleSeat(scheduleSeatId);
+		// 스케줄 + 좌석 검증
+		validateScheduleAndSeat(scheduleId, seatId);
 
-		// 티켓 생성
-		Ticket ticket = Ticket.saveTicket(scheduleSeat);
-
-		// 티켓 DB 저장
+		// Ticket 엔티티 생성 + 저장
+		Ticket ticket = Ticket.saveTicket(scheduleId, seatId);
 		Ticket savedTicket = ticketRepository.save(ticket);
 
 		// 유저티켓 맵핑
 		UserTicket userTicket = new UserTicket(user, savedTicket);
 		userTicketRepository.save(userTicket);
 
-		// 좌석 플래그 트루로 변경
-		scheduleSeat.assign();
-		scheduleSeatRepository.save(scheduleSeat);
+		// 시트 정보 생성
+		SeatResponseDto seatResponseDto = findSeatResponseDto(seatId);
 
-		return TicketResponse.ticketResponse(savedTicket);
-
+		return TicketResponse.ticketDetailedResponse(savedTicket, seatResponseDto);
 	}
 
 	// 티켓 단건 조회
@@ -118,7 +156,16 @@ public class TicketService {
 		// 티켓 소유 확인
 		UserTicket userTicket = findUserTicketOwner(ticketId, authUser.getId());
 
-		return TicketResponse.ticketResponse(userTicket.getTicket());
+		// 티켓 생성
+		Ticket ticket = userTicket.getTicket();
+
+		// 좌석 검증
+		findSeat(ticket.getSeatId());
+
+		// 시트 정보 생성
+		SeatResponseDto seatResponseDto = findSeatResponseDto(ticket.getSeatId());
+
+		return TicketResponse.ticketDetailedResponse(ticket, seatResponseDto);
 	}
 
 	// 티켓 다건 조회
@@ -132,7 +179,7 @@ public class TicketService {
 
 		// 페이지 -1
 		Pageable convertPageable = PageRequest.of(
-			pageable.getPageNumber() - 1,
+			pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
 			pageable.getPageSize(),
 			pageable.getSort()
 		);
@@ -151,23 +198,13 @@ public class TicketService {
 		// 티켓 소유 확인
 		UserTicket userTicket = findUserTicketOwner(ticketId, authUser.getId());
 
-		// 스케줄 좌석 조회
-		ScheduleSeat scheduleSeat = userTicket.getTicket().getScheduleSeat();
-
-		// 좌석 할당 해제
-		scheduleSeat.unassign();
-
 		// 티켓 삭제 (소프트 딜리트)
 		userTicket.getTicket().cancel();
-
-		// 삭제된 정보 DB에 저장
-		ticketRepository.save(userTicket.getTicket());
-		scheduleSeatRepository.save(scheduleSeat);
 	}
 
 	// 티켓 좌석 변경
 	@Transactional
-	@DistributedLock(keyPrefix = "scheduleSeatId", keySuffixExpression = "#requestDto.scheduleSeatId")
+	@DistributedLock(keyPrefix = "scheduleIdSeatId", keySuffixExpression = "#scheduleId + '-' + #seatId")
 	public TicketResponse updateTicket(AuthUser authUser, Long ticketId, TicketChangeRequest requestDto) {
 		// 유저 검증
 		findUser(authUser.getId());
@@ -175,34 +212,32 @@ public class TicketService {
 		// 티켓 소유 확인
 		UserTicket userTicket = findUserTicketOwner(ticketId, authUser.getId());
 
+		// 티켓 생성
+		Ticket ticket = userTicket.getTicket();
+
 		// 티켓 상태 검증
-		if (userTicket.getTicket().getStatus() != TicketStatus.RESERVED) {
+		if (ticket.getStatus() != TicketStatus.RESERVED) {
 			throw new TicketException(TicketErrorCode.TICKET_UPDATE_INVALID_STATUS);
 		}
 
-		ScheduleSeat oldScheduleSeat = userTicket.getTicket().getScheduleSeat();
-		Long newScheduleSeatId = requestDto.getScheduleSeatId();
+		// 새 좌석
+		Long newSeatId = requestDto.getSeatId();
 
-		// 좌석 검증
-		ScheduleSeat newScheduleSeat = findScheduleSeat(newScheduleSeatId);
+		// 요청 좌석과 기존 좌석 동일하면 예외 처리
+		if (Objects.equals(ticket.getSeatId(), newSeatId)) {
+			throw new TicketException(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
+		}
 
-		// 기존 좌석 반환
-		oldScheduleSeat.unassign();
-
-		// 새 좌석 예약
-		newScheduleSeat.assign();
+		// 새 좌석 검증
+		validateScheduleAndSeat(ticket.getScheduleId(), newSeatId);
 
 		// 좌석 변경
-		userTicket.getTicket().changeScheduleSeat(newScheduleSeat);
+		ticket.changeScheduledSeat(newSeatId);
 
-		// 기존 좌석 정보 변경, 새 좌석 정보 변경 DB 저장
-		scheduleSeatRepository.save(oldScheduleSeat);
-		scheduleSeatRepository.save(newScheduleSeat);
+		// 시트 정보 생성
+		SeatResponseDto seatResponseDto = findSeatResponseDto(newSeatId);
 
-		// 티켓 저장
-		Ticket updatedTicket = ticketRepository.save(userTicket.getTicket());
-
-		return TicketResponse.ticketResponse(updatedTicket);
+		return TicketResponse.ticketDetailedResponse(ticket, seatResponseDto);
 	}
 
 	// 티켓을 만료시키는 스케줄링 메서드
@@ -213,8 +248,12 @@ public class TicketService {
 		List<Ticket> tickets = ticketRepository.findTicketsByStatus(TicketStatus.RESERVED);
 
 		for (Ticket ticket : tickets) {
-			if (Objects.equals(ticket.getScheduleSeat().getSchedule().getStatus().toString(),
-				"started")) { // 티켓의 상태 이넘 값을 몰라서 임시로 started 넣었습니다.
+
+			Schedule schedule = scheduleRepository.findById(ticket.getScheduleId())
+				.orElseThrow(
+					() -> new TicketException(TicketErrorCode.SCHEDULE_NOT_FOUND));
+
+			if (schedule.getStatus() != ScheduleStatus.ACTIVE) {
 				ticket.expire();
 			}
 		}

@@ -36,13 +36,14 @@ public class TicketController {
 	private final TicketService ticketService;
 
 	// 티켓 생성
-	@PostMapping("/v1/schedule-seats/{scheduleSeatId}/tickets")
+	@PostMapping("/v1/schedule-seats/{scheduleId}/{seatId}/tickets")
 	public Response<TicketResponse> saveTicket(
 		@AuthenticationPrincipal AuthUser authUser,
-		@PathVariable Long scheduleSeatId
+		@PathVariable Long scheduleId,
+		@PathVariable Long seatId
 	) {
 
-		return Response.of(ticketService.saveTicket(authUser, scheduleSeatId));
+		return Response.of(ticketService.saveTicket(authUser, scheduleId, seatId));
 	}
 
 	// 티켓 단건 조회

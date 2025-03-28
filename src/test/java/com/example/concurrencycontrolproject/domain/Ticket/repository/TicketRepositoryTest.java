@@ -1,8 +1,8 @@
 package com.example.concurrencycontrolproject.domain.Ticket.repository;
 
-import static com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,95 +12,252 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.config.QueryDslConfig;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
-import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
+import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
+import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 import com.example.concurrencycontrolproject.domain.ticket.repository.TicketRepository;
-import com.example.concurrencycontrolproject.domain.ticket.service.TicketService;
+import com.example.concurrencycontrolproject.domain.user.entity.User;
+import com.example.concurrencycontrolproject.domain.userTicket.entity.UserTicket;
+
+import jakarta.persistence.EntityManager;
 
 @DataJpaTest
 @Import(QueryDslConfig.class)
 public class TicketRepositoryTest {
 
 	@Autowired
-	private TestEntityManager entityManager;
+	private EntityManager entityManager;
 
 	@Autowired
 	private TicketRepository ticketRepository;
 
-	Logger logger = LoggerFactory.getLogger(TicketService.class);
+	Logger logger = LoggerFactory.getLogger(TicketRepositoryTest.class);
 
 	// 공용 필드
-	private Schedule schedule;
-	private Seat seat;
-	private ScheduleSeat scheduleSeat;
-	private Ticket ticket;
+	private Schedule schedule1, schedule2;
+	private Seat seat1, seat2;
+	private User user1, user2;
+	private Ticket ticket1, ticket2, ticket3; // Test tickets
 
 	// 테스트용 좌석 생성 메서드
 	private Seat createSeat(Integer number, String grade, Integer price, String section) {
-
-		Seat seat = of(1, "A석", 10000, "A열");
-		ReflectionTestUtils.setField(seat, "number", number);
-		ReflectionTestUtils.setField(seat, "grade", grade);
-		ReflectionTestUtils.setField(seat, "price", price);
-		ReflectionTestUtils.setField(seat, "section", section);
-
-		return seat;
-	}
-
-	// 테스트용 스케줄시트 생성 메서드
-	private ScheduleSeat createScheduleSeat(Schedule schedule, Seat seat) {
-
-		ScheduleSeat scheduleSeat = new ScheduleSeat();
-		ReflectionTestUtils.setField(scheduleSeat, "schedule", schedule);
-		ReflectionTestUtils.setField(scheduleSeat, "seat", seat);
-
-		return scheduleSeat;
+		return Seat.of(number, grade, price, section);
 	}
 
 	@BeforeEach
 	void setUp() {
-		// EntityManager 에 있는 영속성 컨텍스트에 객체를 넣음 => ID도 자동 할당됨
-		schedule = entityManager.persist(new Schedule());
-		seat = entityManager.persist(createSeat(1, "A석", 10000, "A구역"));
+		schedule1 = new Schedule();
+		ReflectionTestUtils.setField(schedule1, "status", ScheduleStatus.ACTIVE);
+		entityManager.persist(schedule1);
 
-		scheduleSeat = entityManager.persist(createScheduleSeat(schedule, seat));
+		schedule2 = new Schedule();
+		ReflectionTestUtils.setField(schedule2, "status", ScheduleStatus.ACTIVE);
+		entityManager.persist(schedule2);
+
+		seat1 = createSeat(1, "A석", 10000, "A구역");
+		entityManager.persist(seat1);
+		seat2 = createSeat(2, "B석", 8000, "B구역");
+		entityManager.persist(seat2);
+
+		user1 = new User();
+		entityManager.persist(user1);
+		user2 = new User();
+		entityManager.persist(user2);
 
 		// 티켓 생성
-		ticket = entityManager.persist(
-			Ticket.builder()
-				.scheduleSeat(scheduleSeat)
-				.status(TicketStatus.RESERVED)
-				.build());
+		ticket1 = Ticket.saveTicket(schedule1.getId(), seat1.getId());
+		entityManager.persist(ticket1);
+		UserTicket ut1 = new UserTicket(user1, ticket1);
+		entityManager.persist(ut1);
 
-		entityManager.flush(); // DB로 넘김
-		entityManager.clear(); // 영속성 컨텍스트 초기화
+		ticket2 = Ticket.saveTicket(schedule1.getId(), seat2.getId());
+		entityManager.persist(ticket2);
+		UserTicket ut2 = new UserTicket(user1, ticket2);
+		entityManager.persist(ut2);
+
+		ticket3 = Ticket.saveTicket(schedule2.getId(), seat1.getId());
+		ticket3.cancel();
+		entityManager.persist(ticket3);
+		UserTicket ut3 = new UserTicket(user2, ticket3);
+		entityManager.persist(ut3);
+
+		entityManager.flush();
+		entityManager.clear();
 	}
 
 	@Test
-	@DisplayName("Ticket 저장 및 ID로 조회가 가능하다")
+	@DisplayName("ID로 티켓 조회가 가능하다")
 	void saveTicketAndFindById() {
 		// given
 
 		// when
-		Ticket ticket = ticketRepository.findById(this.ticket.getId()).orElse(null);
-
-		logger.info("로그1 = {}", ticket.getId());
-		logger.info("로그2 = {}", scheduleSeat.getId());
-		logger.info("로그3 = {}", ticket.getScheduleSeat().getSeat().getPrice());
+		Ticket foundTicket = ticketRepository.findById(ticket1.getId()).orElse(null);
 
 		// then
-		assertThat(ticket).isNotNull();
-		assertThat(Objects.requireNonNull(ticket).getId()).isEqualTo(this.ticket.getId());
-		assertThat(ticket.getStatus()).isEqualTo(TicketStatus.RESERVED);
-		assertThat(ticket.getScheduleSeat().getId()).isEqualTo(scheduleSeat.getId());
+		logger.info("티켓 ID: {}, 스케줄 ID: {}, 시트 ID: {}", foundTicket.getId(),
+			foundTicket.getScheduleId(), foundTicket.getSeatId());
+
+		assertThat(foundTicket).isNotNull();
+		assertThat(Objects.requireNonNull(foundTicket).getId()).isEqualTo(ticket1.getId());
+		assertThat(foundTicket.getStatus()).isEqualTo(TicketStatus.RESERVED);
+		assertThat(foundTicket.getScheduleId()).isEqualTo(schedule1.getId());
+		assertThat(foundTicket.getSeatId()).isEqualTo(seat1.getId());
 	}
 
+	@Test
+	@DisplayName("예약된 티켓 존재 시 existsByScheduleIdAndSeatId 가 true 를 반환한다")
+	void existsByScheduleIdAndSeatId_whenReserved_returnsTrue() {
+		// given
+
+		// when
+		boolean exists = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(
+			schedule1.getId(), seat1.getId(), List.of(TicketStatus.RESERVED)
+		);
+
+		// then
+		assertThat(exists).isTrue();
+	}
+
+	@Test
+	@DisplayName("예약된 티켓 없으면 existsByScheduleIdAndSeatIdAndStatusIn 가 false 를 반환한다")
+	void existsByScheduleIdAndSeatId_whenNotReservedStatus_returnsFalse() {
+		// given
+
+		// when
+		boolean exists = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(
+			schedule2.getId(), seat1.getId(), List.of(TicketStatus.RESERVED)
+		);
+
+		// then
+		assertThat(exists).isFalse();
+	}
+
+	@Test
+	@DisplayName("해당 좌석 + 스케줄이 없으면 existsByScheduleIdAndSeatIdAndStatusIn 가 false 를 반환한다")
+	void existsByScheduleIdAndSeatId_whenSeatOrScheduleNotExist_returnsFalse() {
+		// given
+
+		// when
+		boolean exists = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(
+			schedule2.getId(), seat2.getId(), List.of(TicketStatus.RESERVED)
+		);
+
+		// then
+		assertThat(exists).isFalse();
+	}
+
+	@Test
+	@DisplayName("특정 사용자가 예매한 티켓 조회을 다건 조회할 수 있다")
+	void findTickets_findByUserAndStatus() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		Page<TicketResponse> resultPage = ticketRepository.findTickets(
+			user1.getId(),
+			pageable,
+			null,
+			"RESERVED",
+			null,
+			null
+		);
+
+		// then
+		logger.info("시트1 ID: {}", seat1.getId());
+		logger.info("시트2 ID: {}", seat2.getId());
+
+		assertThat(resultPage).isNotNull();
+		assertThat(resultPage.getTotalElements()).isEqualTo(2);
+		assertThat(resultPage.getContent().size()).isEqualTo(2);
+
+		assertThat(resultPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.RESERVED);
+		assertThat(resultPage.getContent().get(1).getStatus()).isEqualTo(TicketStatus.RESERVED);
+
+		assertThat(resultPage.getContent().get(0).getSeat()).isNotNull();
+		assertThat(resultPage.getContent().get(0).getSeat().getId()).isIn(seat1.getId(), seat2.getId());
+
+	}
+
+	@Test
+	@DisplayName("특정 사용자의 특정 스케줄의 티켓을 다건 조회할 수 있다")
+	void findTickets_findBySchedule() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		Page<TicketResponse> resultPage = ticketRepository.findTickets(
+			user1.getId(),
+			pageable,
+			schedule1.getId(),
+			null,
+			null,
+			null
+		);
+
+		// then
+		logger.info("요소1의 시트 ID: {}", resultPage.getContent().get(0).getSeat().getId());
+		logger.info("요소2의 시트 ID: {}", resultPage.getContent().get(1).getSeat().getId());
+
+		assertThat(resultPage).isNotNull();
+		assertThat(resultPage.getTotalElements()).isEqualTo(2);
+		assertThat(resultPage.getContent().size()).isEqualTo(2);
+	}
+
+	@Test
+	@DisplayName("특정 사용자의 특정 상태 티켓을 다건 조회할 수 있다")
+	void findTickets_findByUserAndCanceledStatus() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		Page<TicketResponse> resultPage = ticketRepository.findTickets(
+			user2.getId(),
+			pageable,
+			null,
+			"CANCELED",
+			null,
+			null
+		);
+
+		// then
+		logger.info("요소1의 시트 ID: {}", resultPage.getContent().get(0).getSeat().getId());
+
+		assertThat(resultPage).isNotNull();
+		assertThat(resultPage.getTotalElements()).isEqualTo(1);
+		assertThat(resultPage.getContent().size()).isEqualTo(1);
+		assertThat(resultPage.getContent().get(0).getId()).isEqualTo(ticket3.getId());
+		assertThat(resultPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.CANCELED);
+	}
+
+	@Test
+	@DisplayName("다건 조회 결과가 없으면 빈페이지를 반환한다")
+	void findTickets_noResults() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+
+		// when
+		Page<TicketResponse> resultPage = ticketRepository.findTickets(
+			user1.getId(),
+			pageable,
+			null,
+			"EXPIRED",
+			null,
+			null
+		);
+
+		// then
+		assertThat(resultPage).isNotNull();
+		assertThat(resultPage.getTotalElements()).isEqualTo(0);
+		assertThat(resultPage.getContent().isEmpty()).isTrue();
+	}
 }

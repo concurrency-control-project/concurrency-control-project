@@ -22,20 +22,30 @@ public class TicketResponse {
 	private LocalDateTime modifiedAt;
 	private SeatResponseDto seat;
 
-	public static TicketResponse ticketResponse(Ticket ticket) {
+	// 티켓 세부 정보
+	public static TicketResponse ticketDetailedResponse(
+		Ticket ticket,
+		SeatResponseDto seatResponseDto
+	) {
 		return TicketResponse.builder()
 			.id(ticket.getId())
-			.scheduleId(ticket.getScheduleSeat().getSchedule().getId())
+			.scheduleId(ticket.getScheduleId())
 			.status(ticket.getStatus())
 			.createdAt(ticket.getCreatedAt())
 			.modifiedAt(ticket.getModifiedAt())
-			.seat(SeatResponseDto.builder()  // SeatResponse 생성
-				.id(ticket.getScheduleSeat().getSeat().getId())
-				.number(ticket.getScheduleSeat().getSeat().getNumber())
-				.grade(ticket.getScheduleSeat().getSeat().getGrade())
-				.price(ticket.getScheduleSeat().getSeat().getPrice())
-				.section(ticket.getScheduleSeat().getSeat().getSection())
-				.build())
+			.seat(seatResponseDto)
+			.build();
+	}
+
+	// 티켓 다건 조회
+	public static TicketResponse ticketPageResponse(Ticket ticket) {
+		return TicketResponse.builder()
+			.id(ticket.getId())
+			.status(ticket.getStatus())
+			.createdAt(ticket.getCreatedAt())
+			.modifiedAt(ticket.getModifiedAt())
+			.scheduleId(ticket.getScheduleId())
+			.seat(null)
 			.build();
 	}
 

@@ -51,37 +51,57 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 		RLock lock = redissonClient.getLock(lockKey);
 		log.info("락 획득 시도: {}", lockKey);
 
+		// 디버깅용 타임아웃 값 계산
+		long waitMillis = distributedLock.timeUnit().toMillis(distributedLock.waitTime());
+		long leaseMillis = distributedLock.timeUnit().toMillis(distributedLock.leaseTime());
+
+		log.info("[Thread-{}] 락 획득 시도: Key='{}', WaitTime={}ms, LeaseTime={}ms",
+			Thread.currentThread().getId(), lockKey, waitMillis, leaseMillis); // 스레드 ID 및 타임아웃 로깅
+
 		try {
 			// @DistributedLock 에서 설정한 시간 관련 값
 			boolean isLocked = lock.tryLock(distributedLock.waitTime(), distributedLock.leaseTime(),
 				distributedLock.timeUnit());
 
+			log.info("[Thread-{}] 락 획득 결과: {}, Key='{}'",
+				Thread.currentThread().getId(), isLocked, lockKey); // 락 획득 결과 로깅
+
 			// 락 획득 실패 시 처리
 			if (!isLocked) {
-				log.warn("락 획득 실패: {}", lockKey);
+				log.warn("[Thread-{}] 락 획득 실패 (타임아웃): Key='{}'",
+					Thread.currentThread().getId(), lockKey);
 				// 정해진 시간(waitTime) 동안 락을 얻지 못함 -> 예외 발생시켜 메서드 실행 중단
-				throw new RuntimeException("획득 실패한 락: " + lockKey);
+				throw new RuntimeException("획득 실패한 락 (타임아웃): " + lockKey);
 			}
 
 			// 락 획득 성공 시 처리
-			log.info("락 획득 성공: {}", lockKey);
+			log.info("[Thread-{}] 락 획득 성공: Key='{}'", Thread.currentThread().getId(), lockKey);
 			// AOP 가 적용된 원래 메서드 실행 => 이 메서드의 반환값이 applyLock 메서드의 최종 반환값이 됨
 			return joinPoint.proceed();
 
 			// 락 획득 대기 중에 스레드가 중단(interrupt)될 경우의 처리
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
+			log.error("[Thread-{}] 락 획득 중 인터럽트 발생: Key='{}'", Thread.currentThread().getId(), lockKey, e);
 			throw new RuntimeException("락 획득 중단", e);
 		} finally {
 			// 작업 완료 후 최종적으로 락 해제 (락 반환) => finally 블록으로 오류가 발생하든, 성공하든 무조건 락 해제
-			if (lock != null && lock.isHeldByCurrentThread()) {
+
+			if (lock.isLocked() && lock.isHeldByCurrentThread()) {
 				// lock.isHeldByCurrentThread(): 현재 이 코드를 실행하는 스레드가 실제로 락을 점유하고 있는지 확인 => 락이 없는데 unlock 호출하는 것 방지
-				lock.unlock();
-				log.info("락 해제 성공: {}", lockKey);
+				try {
+					lock.unlock();
+					log.info("[Thread-{}] 락 해제 성공: Key='{}'", Thread.currentThread().getId(), lockKey);
+				} catch (IllegalMonitorStateException e) {
+					// 이미 다른 스레드나 이유로 락이 해제된 경우 발생할 수 있음
+					log.error("[Thread-{}] 락 해제 시도 중 오류 발생: Key='{}'", Thread.currentThread().getId(),
+						lockKey, e);
+				}
+			} else {
+				// 락을 점유하고 있지 않은 경우 (tryLock 실패 후 finally 진입)
+				log.info("[Thread-{}] 락을 점유하고 있지 않아 해제 건너뜀: Key='{}'", Thread.currentThread().getId(), lockKey);
 			}
-
 		}
-
 	}
 
 	// 동적 키 생성 메서드 (SpEL)
