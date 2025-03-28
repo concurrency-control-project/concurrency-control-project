@@ -20,8 +20,10 @@ import com.example.concurrencycontrolproject.domain.schedule.dto.response.AdminS
 import com.example.concurrencycontrolproject.domain.schedule.dto.response.UserScheduleResponse;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
+import com.example.concurrencycontrolproject.domain.schedule.exception.DuplicateScheduleException;
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleErrorCode;
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleException;
+import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleOutOfConcertRangeException;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -38,11 +40,7 @@ public class ScheduleService {
 	public AdminScheduleResponse saveSchedule(AuthUser authUser, CreateScheduleRequest request) {
 
 		Concert concert = findConcertById(request.getConcertId());
-
-		// 동일한 공연, 동일한 시간에 스케줄이 이미 존재하는지 검증
-		if (scheduleRepository.existsByConcertIdAndDateTime(concert.getId(), request.getDateTime())) {
-			throw new ScheduleException(ScheduleErrorCode.DUPLICATE_SCHEDULE);
-		}
+		validateScheduleDateTime(concert, request.getDateTime());
 
 		Schedule schedule = Schedule.of(concert, request.getDateTime(), ScheduleStatus.ACTIVE);
 
@@ -52,7 +50,8 @@ public class ScheduleService {
 
 	// 공연 스케줄 다건 조회 (관리자)
 	@Transactional(readOnly = true)
-	public Page<AdminScheduleResponse> getAdminSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
+	public Page<AdminScheduleResponse> getAdminSchedules(AuthUser authUser, Long concertId, LocalDate date, int page,
+		int size) {
 
 		// 공연이 존재하는지 확인
 		findConcertById(concertId);
@@ -69,12 +68,13 @@ public class ScheduleService {
 
 	// 공연 스케줄 다건 조회 (사용자)
 	@Transactional(readOnly = true)
-	public Page<UserScheduleResponse> getUserSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
+	public Page<UserScheduleResponse> getUserSchedules(AuthUser authUser, Long concertId, LocalDate date, int page,
+		int size) {
 
 		// 공연이 존재하는지 확인
 		findConcertById(concertId);
 
-		// LocalDate를 LocalDateTime으로 변환 (해당 날짜의 00:00:00 부터 23:59:59 까지)
+		// LocalDate -> LocalDateTime로 변환 (해당 날짜의 00:00:00 부터 23:59:59 까지)
 		LocalDateTime start = date.atStartOfDay(); // 해당 날짜의 시작 (00:00:00)
 		LocalDateTime end = date.plusDays(1).atStartOfDay(); // 다음 날의 시작 (00:00:00)
 
@@ -139,5 +139,18 @@ public class ScheduleService {
 	private Schedule findScheduleByConcertIdAndId(Long concertId, Long scheduleId) {
 		return scheduleRepository.findByIdAndConcertId(concertId, scheduleId)
 			.orElseThrow(() -> new ScheduleException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+	}
+
+	private void validateScheduleDateTime(Concert concert, LocalDateTime dateTime) {
+		// 공연 시간 범위 내에 있는 스케줄인지 검증
+		if (dateTime.isBefore(concert.getConcertStartDateTime()) ||
+			dateTime.isAfter(concert.getConcertEndDateTime())) {
+			throw new ScheduleOutOfConcertRangeException();
+		}
+
+		// 동일한 시간에 이미 존재하는 스케줄인지 검증
+		if (scheduleRepository.existsByConcertIdAndDateTime(concert.getId(), dateTime)) {
+			throw new DuplicateScheduleException();
+		}
 	}
 }
