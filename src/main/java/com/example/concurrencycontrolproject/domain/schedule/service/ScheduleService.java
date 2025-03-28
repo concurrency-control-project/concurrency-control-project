@@ -1,6 +1,7 @@
 package com.example.concurrencycontrolproject.domain.schedule.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,26 +46,30 @@ public class ScheduleService {
 
 	// 공연 스케줄 다건 조회 (관리자)
 	@Transactional(readOnly = true)
-	public Page<AdminScheduleResponse> getAdminSchedules(AuthUser authUser, Long concertId, LocalDate date, int page,
-		int size) {
+	public Page<AdminScheduleResponse> getAdminSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
 
 		findConcertById(concertId);
 
+		LocalDateTime start = date.atStartOfDay();
+		LocalDateTime end = date.plusDays(1).atStartOfDay();
+
 		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("datetime").ascending());
-		Page<Schedule> schedules = scheduleRepository.findByConcertIdAndDatetime(concertId, date, pageable);
+		Page<Schedule> schedules = scheduleRepository.findByConcertIdAndDatetime(concertId, start, end, pageable);
 
 		return schedules.map(AdminScheduleResponse::of);
 	}
 
 	// 공연 스케줄 다건 조회 (사용자)
 	@Transactional(readOnly = true)
-	public Page<UserScheduleResponse> getUserSchedules(AuthUser authUser, Long concertId, LocalDate date, int page,
-		int size) {
+	public Page<UserScheduleResponse> getUserSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
 
 		findConcertById(concertId);
 
+		LocalDateTime start = date.atStartOfDay();
+		LocalDateTime end = date.plusDays(1).atStartOfDay();
+
 		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("datetime").ascending());
-		Page<Schedule> schedules = scheduleRepository.findActiveByConcertIdAndDatetime(concertId, date, pageable);
+		Page<Schedule> schedules = scheduleRepository.findActiveByConcertIdAndDatetime(concertId, start, end, pageable);
 
 		return schedules.map(UserScheduleResponse::of);
 	}
