@@ -1,13 +1,13 @@
-package com.example.concurrencycontrolproject.auth.service;
+package com.example.concurrencycontrolproject.authentication.jwt.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import com.example.concurrencycontrolproject.auth.entity.RefreshToken;
-import com.example.concurrencycontrolproject.auth.exception.AuthenticationExpiredException;
-import com.example.concurrencycontrolproject.auth.repository.RefreshTokenRepository;
+import com.example.concurrencycontrolproject.authentication.jwt.token.RefreshToken;
+import com.example.concurrencycontrolproject.authentication.exception.AuthenticationExpiredException;
+import com.example.concurrencycontrolproject.authentication.jwt.repository.RefreshTokenRepository;
 
 import lombok.RequiredArgsConstructor;
 

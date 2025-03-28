@@ -7,7 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.concurrencycontrolproject.domain.auth.exception.AuthException;
+import com.example.concurrencycontrolproject.authentication.exception.AuthException;
 import com.example.concurrencycontrolproject.domain.common.exception.ErrorCode;
 import com.example.concurrencycontrolproject.domain.common.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;

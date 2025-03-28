@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.jwt;
+package com.example.concurrencycontrolproject.authentication.jwt.token;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 

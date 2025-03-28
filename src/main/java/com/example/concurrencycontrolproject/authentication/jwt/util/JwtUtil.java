@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.jwt;
+package com.example.concurrencycontrolproject.authentication.jwt.util;
 
 import java.security.Key;
 import java.util.Base64;
@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.example.concurrencycontrolproject.auth.exception.InvalidTokenException;
-import com.example.concurrencycontrolproject.auth.exception.TokenNotFoundException;
-import com.example.concurrencycontrolproject.auth.service.RefreshTokenService;
+import com.example.concurrencycontrolproject.authentication.exception.InvalidTokenException;
+import com.example.concurrencycontrolproject.authentication.exception.TokenNotFoundException;
+import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshTokenService;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
