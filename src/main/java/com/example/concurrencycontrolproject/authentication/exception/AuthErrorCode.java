@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.exception;
+package com.example.concurrencycontrolproject.authentication.exception;
 
 import org.springframework.http.HttpStatus;
 
@@ -10,7 +10,9 @@ enum AuthErrorCode implements ErrorCode {
 	INVALID_JWT_SIGNATURE(HttpStatus.UNAUTHORIZED, "INVALID_JWT_SIGNATURE", "유효하지 않는 JWT 서명입니다."),
 	TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "TOKEN_NOT_FOUND", "JWT 토큰을 찾을 수 없습니다."),
 	UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", "지원하지 않는 JWT 토큰입니다."),
-	AUTHENTICATION_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_EXPIRED", "로그인 시간이 만료되었습니다. 다시 로그인 해주세요.");
+	AUTHENTICATION_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_EXPIRED", "로그인 시간이 만료되었습니다. 다시 로그인 해주세요."),
+	UNSUPPORTED_PROVIDER(HttpStatus.BAD_REQUEST, "UNSUPPORTED_PROVIDER", "지원하지 않는 소셜 서비스 입니다."),
+	DUPLICATE_SOCIAL_EMAIL(HttpStatus.BAD_REQUEST, "DUPLICATE_SOCIAL_EMAIL", "해당 소셜 사이트로 이미 가입한 이메일 입니다.");
 
 	private final HttpStatus status;
 	private final String code;

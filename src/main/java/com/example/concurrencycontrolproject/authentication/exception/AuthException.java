@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.exception;
+package com.example.concurrencycontrolproject.authentication.exception;
 
 import org.springframework.http.HttpStatus;
 
