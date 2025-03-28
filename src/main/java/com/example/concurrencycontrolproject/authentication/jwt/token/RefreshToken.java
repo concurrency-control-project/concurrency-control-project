@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.entity;
+package com.example.concurrencycontrolproject.authentication.jwt.token;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;

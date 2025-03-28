@@ -7,17 +7,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.concurrencycontrolproject.domain.auth.exception.AuthenticationExpiredException;
-import com.example.concurrencycontrolproject.domain.auth.exception.ExpiredJwtTokenException;
-import com.example.concurrencycontrolproject.domain.auth.exception.InvalidJwtSignatureException;
-import com.example.concurrencycontrolproject.domain.auth.exception.InvalidTokenException;
-import com.example.concurrencycontrolproject.domain.auth.exception.TokenNotFoundException;
-import com.example.concurrencycontrolproject.domain.auth.exception.UnsupportedJwtTokenException;
+import com.example.concurrencycontrolproject.authentication.exception.AuthenticationExpiredException;
+import com.example.concurrencycontrolproject.authentication.exception.ExpiredJwtTokenException;
+import com.example.concurrencycontrolproject.authentication.exception.InvalidJwtSignatureException;
+import com.example.concurrencycontrolproject.authentication.exception.InvalidTokenException;
+import com.example.concurrencycontrolproject.authentication.exception.TokenNotFoundException;
+import com.example.concurrencycontrolproject.authentication.exception.UnsupportedJwtTokenException;
+import com.example.concurrencycontrolproject.authentication.jwt.token.JwtAuthenticationToken;
+import com.example.concurrencycontrolproject.authentication.jwt.util.JwtUtil;
+import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshTokenService;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
-import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
-import com.example.concurrencycontrolproject.global.jwt.JwtUtil;
-import com.example.concurrencycontrolproject.global.redis.RefreshCacheUtil;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.MalformedJwtException;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
-	private final RefreshCacheUtil redisCache;
+	private final RefreshTokenService redisCache;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
