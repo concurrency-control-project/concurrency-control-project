@@ -2,6 +2,7 @@ package com.example.concurrencycontrolproject.domain.Ticket.DistributedLock;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -17,10 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.domain.Ticket.service.TicketServiceTest;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
+import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
+import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
@@ -62,6 +64,9 @@ public class TicketDistributedLockTest {
 	@Autowired
 	private UserTicketRepository userTicketRepository;
 
+	@Autowired
+	private ConcertRepository concertRepository;
+
 	Logger logger = LoggerFactory.getLogger(TicketServiceTest.class);
 
 	private Seat seat1;
@@ -74,9 +79,23 @@ public class TicketDistributedLockTest {
 		seat1 = Seat.of(1, "A석", 100000, "A열");
 		seatRepository.save(seat1);
 
-		schedule1 = new Schedule();
-		ReflectionTestUtils.setField(schedule1, "status", ScheduleStatus.ACTIVE);
-		scheduleRepository.save(schedule1);
+		Concert concert = concertRepository.save(
+			Concert.builder()
+				.title("Spring Festival")
+				.performer("Artist")
+				.description("Awesome spring concert")
+				.concertStartDateTime(LocalDateTime.of(2025, 5, 1, 18, 0))
+				.concertEndDateTime(LocalDateTime.of(2025, 5, 31, 22, 0))
+				.bookingStartDateTime(LocalDateTime.of(2025, 4, 1, 0, 0))
+				.bookingEndDateTime(LocalDateTime.of(2025, 4, 30, 23, 59))
+				.location("Seoul")
+				.build()
+		);
+		schedule1 = scheduleRepository.save(
+			Schedule.of(
+				concert,
+				LocalDateTime.of(2025, 5, 22, 20, 0),
+				ScheduleStatus.ACTIVE));
 
 		// 각 스레드에 할당할 사용자 생성 => 여러 사람이 동시에 예매한 것 처럼 테스트
 		authUsers = new ArrayList<>();

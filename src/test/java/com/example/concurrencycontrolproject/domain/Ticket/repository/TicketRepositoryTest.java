@@ -2,6 +2,7 @@ package com.example.concurrencycontrolproject.domain.Ticket.repository;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,9 +17,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.config.QueryDslConfig;
+import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
+import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
@@ -41,6 +43,9 @@ public class TicketRepositoryTest {
 	@Autowired
 	private TicketRepository ticketRepository;
 
+	@Autowired
+	private ConcertRepository concertRepository;
+
 	Logger logger = LoggerFactory.getLogger(TicketRepositoryTest.class);
 
 	// 공용 필드
@@ -56,12 +61,29 @@ public class TicketRepositoryTest {
 
 	@BeforeEach
 	void setUp() {
-		schedule1 = new Schedule();
-		ReflectionTestUtils.setField(schedule1, "status", ScheduleStatus.ACTIVE);
+
+		Concert concert = concertRepository.save(
+			Concert.builder()
+				.title("Spring Festival")
+				.performer("Artist")
+				.description("Awesome spring concert")
+				.concertStartDateTime(LocalDateTime.of(2025, 5, 1, 18, 0))
+				.concertEndDateTime(LocalDateTime.of(2025, 5, 31, 22, 0))
+				.bookingStartDateTime(LocalDateTime.of(2025, 4, 1, 0, 0))
+				.bookingEndDateTime(LocalDateTime.of(2025, 4, 30, 23, 59))
+				.location("Seoul")
+				.build()
+		);
+		schedule1 = Schedule.of(
+			concert,
+			LocalDateTime.of(2025, 5, 22, 20, 0),
+			ScheduleStatus.ACTIVE);
 		entityManager.persist(schedule1);
 
-		schedule2 = new Schedule();
-		ReflectionTestUtils.setField(schedule2, "status", ScheduleStatus.ACTIVE);
+		schedule2 = Schedule.of(
+			concert,
+			LocalDateTime.of(2025, 5, 22, 20, 0),
+			ScheduleStatus.ACTIVE);
 		entityManager.persist(schedule2);
 
 		seat1 = createSeat(1, "A석", 10000, "A구역");

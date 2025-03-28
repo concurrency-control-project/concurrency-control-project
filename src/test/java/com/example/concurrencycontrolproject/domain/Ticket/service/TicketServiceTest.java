@@ -3,6 +3,7 @@ package com.example.concurrencycontrolproject.domain.Ticket.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,10 +16,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
+import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
+import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
@@ -60,6 +62,9 @@ public class TicketServiceTest {
 	@Autowired
 	private EntityManager entityManager;
 
+	@Autowired
+	private ConcertRepository concertRepository;
+
 	Logger logger = LoggerFactory.getLogger(TicketServiceTest.class);
 
 	// 공용 필드
@@ -71,12 +76,6 @@ public class TicketServiceTest {
 	private Seat createAndSaveSeat(Integer number, String grade, Integer price, String section) {
 		Seat seat = Seat.of(number, grade, price, section);
 		return seatRepository.save(seat);
-	}
-
-	private Schedule createAndSaveSchedule(ScheduleStatus status) {
-		Schedule schedule = new Schedule();
-		ReflectionTestUtils.setField(schedule, "status", status);
-		return scheduleRepository.save(schedule);
 	}
 
 	@BeforeEach
@@ -92,9 +91,31 @@ public class TicketServiceTest {
 		authUser1 = new AuthUser(user1.getId(), "user1@email.com", UserRole.ROLE_USER, "유저1닉네임");
 		authUser2 = new AuthUser(user2.getId(), "user2@email.com", UserRole.ROLE_USER, "유저2닉네임");
 
+		Concert concert = concertRepository.save(
+			Concert.builder()
+				.title("Spring Festival")
+				.performer("Artist")
+				.description("Awesome spring concert")
+				.concertStartDateTime(LocalDateTime.of(2025, 5, 1, 18, 0))
+				.concertEndDateTime(LocalDateTime.of(2025, 5, 31, 22, 0))
+				.bookingStartDateTime(LocalDateTime.of(2025, 4, 1, 0, 0))
+				.bookingEndDateTime(LocalDateTime.of(2025, 4, 30, 23, 59))
+				.location("Seoul")
+				.build()
+		);
+
 		// 스케줄 생성 및 저장
-		schedule1 = createAndSaveSchedule(ScheduleStatus.ACTIVE);
-		schedule2 = createAndSaveSchedule(ScheduleStatus.ACTIVE);
+		schedule1 = scheduleRepository.save(
+			Schedule.of(
+				concert,
+				LocalDateTime.of(2025, 5, 22, 20, 0),
+				ScheduleStatus.ACTIVE));
+
+		schedule2 = scheduleRepository.save(
+			Schedule.of(
+				concert,
+				LocalDateTime.of(2025, 5, 22, 20, 0),
+				ScheduleStatus.ACTIVE));
 
 		// 좌석 생성 및 저장
 		seat1 = createAndSaveSeat(1, "A석", 100000, "A열");
@@ -147,7 +168,24 @@ public class TicketServiceTest {
 	@DisplayName("공연이 끝난 스케줄의 좌석으로 티켓 생성 시 예외가 발생한다")
 	void saveTicket_whenScheduleIsDeleted_throwsException() {
 		// given
-		Schedule deletedSchedule = createAndSaveSchedule(ScheduleStatus.DELETED);
+		Concert concert = concertRepository.save(
+			Concert.builder()
+				.title("Spring Festival")
+				.performer("Artist")
+				.description("Awesome spring concert")
+				.concertStartDateTime(LocalDateTime.of(2025, 5, 1, 18, 0))
+				.concertEndDateTime(LocalDateTime.of(2025, 5, 31, 22, 0))
+				.bookingStartDateTime(LocalDateTime.of(2025, 4, 1, 0, 0))
+				.bookingEndDateTime(LocalDateTime.of(2025, 4, 30, 23, 59))
+				.location("Seoul")
+				.build()
+		);
+
+		Schedule deletedSchedule = scheduleRepository.save(
+			Schedule.of(
+				concert,
+				LocalDateTime.of(2025, 5, 22, 20, 0),
+				ScheduleStatus.DELETED));
 		Long scheduleId = deletedSchedule.getId();
 		Long seatId = seat1.getId();
 		entityManager.flush();
