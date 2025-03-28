@@ -15,6 +15,8 @@ import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
+	// 중복된 스케줄 확인
+	boolean existsByConcertIdAndDateTime(Long concertId, LocalDateTime dateTime);
 
 	// 관리자에게 모든 상태 노출, datetime에서 날짜만 추출하여 조회
 	@EntityGraph(attributePaths = "concert")

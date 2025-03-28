@@ -38,6 +38,12 @@ public class ScheduleService {
 	public AdminScheduleResponse saveSchedule(AuthUser authUser, CreateScheduleRequest request) {
 
 		Concert concert = findConcertById(request.getConcertId());
+
+		// 동일한 공연, 동일한 시간에 스케줄이 이미 존재하는지 검증
+		if (scheduleRepository.existsByConcertIdAndDateTime(concert.getId(), request.getDateTime())) {
+			throw new ScheduleException(ScheduleErrorCode.DUPLICATE_SCHEDULE);
+		}
+
 		Schedule schedule = Schedule.of(concert, request.getDateTime(), ScheduleStatus.ACTIVE);
 
 		Schedule savedSchedule = scheduleRepository.save(schedule);
@@ -48,12 +54,14 @@ public class ScheduleService {
 	@Transactional(readOnly = true)
 	public Page<AdminScheduleResponse> getAdminSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
 
+		// 공연이 존재하는지 확인
 		findConcertById(concertId);
 
-		LocalDateTime start = date.atStartOfDay();
-		LocalDateTime end = date.plusDays(1).atStartOfDay();
+		// LocalDate -> LocalDateTime 변환 (해당 날짜의 00:00:00 부터 23:59:59 까지)
+		LocalDateTime start = date.atStartOfDay(); // 해당 날짜의 시작 (00:00:00)
+		LocalDateTime end = date.plusDays(1).atStartOfDay(); // 다음 날의 시작 (00:00:00)
 
-		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("datetime").ascending());
+		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("dateTime").ascending());
 		Page<Schedule> schedules = scheduleRepository.findByConcertIdAndDatetime(concertId, start, end, pageable);
 
 		return schedules.map(AdminScheduleResponse::of);
@@ -63,12 +71,14 @@ public class ScheduleService {
 	@Transactional(readOnly = true)
 	public Page<UserScheduleResponse> getUserSchedules(AuthUser authUser, Long concertId, LocalDate date, int page, int size) {
 
+		// 공연이 존재하는지 확인
 		findConcertById(concertId);
 
-		LocalDateTime start = date.atStartOfDay();
-		LocalDateTime end = date.plusDays(1).atStartOfDay();
+		// LocalDate를 LocalDateTime으로 변환 (해당 날짜의 00:00:00 부터 23:59:59 까지)
+		LocalDateTime start = date.atStartOfDay(); // 해당 날짜의 시작 (00:00:00)
+		LocalDateTime end = date.plusDays(1).atStartOfDay(); // 다음 날의 시작 (00:00:00)
 
-		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("datetime").ascending());
+		Pageable pageable = PageRequest.of(page - 1, size, Sort.by("dateTime").ascending());
 		Page<Schedule> schedules = scheduleRepository.findActiveByConcertIdAndDatetime(concertId, start, end, pageable);
 
 		return schedules.map(UserScheduleResponse::of);
