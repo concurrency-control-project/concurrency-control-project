@@ -4,8 +4,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithSecurityContextFactory;
 
+import com.example.concurrencycontrolproject.authentication.jwt.token.JwtAuthenticationToken;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
-import com.example.concurrencycontrolproject.global.jwt.JwtAuthenticationToken;
 
 public class TestSecurityContextFactory implements WithSecurityContextFactory<WithMockAuthUser> {
 
