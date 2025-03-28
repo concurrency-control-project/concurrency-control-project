@@ -45,5 +45,4 @@ public class GlobalExceptionHandler {
 		log.error("Exception : {}", e.getMessage(), e);
 		return ErrorResponse.of("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.");
 	}
-
 }
