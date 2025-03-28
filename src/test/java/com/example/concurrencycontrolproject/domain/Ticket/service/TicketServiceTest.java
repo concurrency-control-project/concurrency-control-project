@@ -1,8 +1,9 @@
 package com.example.concurrencycontrolproject.domain.Ticket.service;
 
-import static com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat.*;
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,21 +20,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
-import com.example.concurrencycontrolproject.domain.scheduleSeat.entity.ScheduleSeat;
-import com.example.concurrencycontrolproject.domain.scheduleSeat.response.ScheduleSeatRepository;
+import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
+import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
+import com.example.concurrencycontrolproject.domain.seat.repository.seat.SeatRepository;
 import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequest;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.Ticket;
 import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
+import com.example.concurrencycontrolproject.domain.ticket.exception.TicketErrorCode;
 import com.example.concurrencycontrolproject.domain.ticket.exception.TicketException;
 import com.example.concurrencycontrolproject.domain.ticket.repository.TicketRepository;
 import com.example.concurrencycontrolproject.domain.ticket.service.TicketService;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
-import com.example.concurrencycontrolproject.domain.userTicket.entity.UserTicket;
-import com.example.concurrencycontrolproject.domain.userTicket.repository.UserTicketRepository;
 
 import jakarta.persistence.EntityManager;
 
@@ -51,78 +52,56 @@ public class TicketServiceTest {
 	private UserRepository userRepository;
 
 	@Autowired
-	private ScheduleSeatRepository scheduleSeatRepository;
+	private ScheduleRepository scheduleRepository;
+
+	@Autowired
+	private SeatRepository seatRepository;
 
 	@Autowired
 	private EntityManager entityManager;
 
-	@Autowired
-	private UserTicketRepository userTicketRepository;
-
-	Logger logger = LoggerFactory.getLogger(TicketService.class);
+	Logger logger = LoggerFactory.getLogger(TicketServiceTest.class);
 
 	// 공용 필드
-	private User user;
-	private AuthUser authUser;
-	private Schedule schedule;
-	private Seat seat1, seat2;
-	private ScheduleSeat scheduleSeat1, scheduleSeat2;
+	private User user1, user2;
+	private AuthUser authUser1, authUser2;
+	private Schedule schedule1, schedule2;
+	private Seat seat1, seat2, seat3;
 
-	// 테스트용 좌석 생성 메서드
-	private Seat createSeat(Integer number, String grade, Integer price, String section) {
-
-		Seat seat = of(1, "A석", 10000, "A열");
-		ReflectionTestUtils.setField(seat, "number", number);
-		ReflectionTestUtils.setField(seat, "grade", grade);
-		ReflectionTestUtils.setField(seat, "price", price);
-		ReflectionTestUtils.setField(seat, "section", section);
-
-		return seat;
+	private Seat createAndSaveSeat(Integer number, String grade, Integer price, String section) {
+		Seat seat = Seat.of(number, grade, price, section);
+		return seatRepository.save(seat);
 	}
 
-	// 테스트용 스케줄시트 생성 메서드
-	private ScheduleSeat createScheduleSeat(Schedule schedule, Seat seat) {
-
-		ScheduleSeat scheduleSeat = new ScheduleSeat();
-		ReflectionTestUtils.setField(scheduleSeat, "schedule", schedule);
-		ReflectionTestUtils.setField(scheduleSeat, "seat", seat);
-
-		return scheduleSeat;
+	private Schedule createAndSaveSchedule(ScheduleStatus status) {
+		Schedule schedule = new Schedule();
+		ReflectionTestUtils.setField(schedule, "status", status);
+		return scheduleRepository.save(schedule);
 	}
 
 	@BeforeEach
 	void setUp() {
 
-		// 테스트 전, 컨텍스트 초기화 (명시적)
-		entityManager.clear();
-
 		// 유저 생성 및 저장
-		user = new User();
-		userRepository.saveAndFlush(user); // 바로 DB로 저장
+		user1 = new User();
+		userRepository.saveAndFlush(user1);
+		user2 = new User();
+		userRepository.saveAndFlush(user2);
 
 		// authUser 생성
-		authUser = new AuthUser(user.getId(), "유저이메일", UserRole.ROLE_USER, "유저닉네임");
+		authUser1 = new AuthUser(user1.getId(), "user1@email.com", UserRole.ROLE_USER, "유저1닉네임");
+		authUser2 = new AuthUser(user2.getId(), "user2@email.com", UserRole.ROLE_USER, "유저2닉네임");
 
 		// 스케줄 생성 및 저장
-		schedule = new Schedule();
-		entityManager.persist(schedule);
+		schedule1 = createAndSaveSchedule(ScheduleStatus.ACTIVE);
+		schedule2 = createAndSaveSchedule(ScheduleStatus.ACTIVE);
 
 		// 좌석 생성 및 저장
-		seat1 = createSeat(1, "A석", 10000, "A구역");
-		entityManager.persist(seat1);
-		seat2 = createSeat(2, "B석", 8000, "B구역");
-		entityManager.persist(seat2);
+		seat1 = createAndSaveSeat(1, "A석", 100000, "A열");
+		seat2 = createAndSaveSeat(2, "B석", 80000, "B열");
+		seat3 = createAndSaveSeat(3, "C석", 50000, "C열");
 
-		// 스케줄시트 생성 및 저장
-		scheduleSeat1 = createScheduleSeat(schedule, seat1);
-		scheduleSeatRepository.save(scheduleSeat1);
-		scheduleSeat2 = createScheduleSeat(schedule, seat2);
-		scheduleSeatRepository.save(scheduleSeat2);
-
-		// DB 저장
 		entityManager.flush();
-
-		// 컨텍스트 초기화
 		entityManager.clear();
 	}
 
@@ -130,205 +109,185 @@ public class TicketServiceTest {
 	@DisplayName("티켓 생성에 성공한다")
 	void saveTicket_success() {
 		// given
+		Long scheduleId = schedule1.getId();
+		Long seatId = seat1.getId();
 
 		// when
-		TicketResponse responseDto = ticketService.saveTicket(authUser, scheduleSeat1.getId());
-		ScheduleSeat reservedSeat = scheduleSeatRepository.findById(scheduleSeat1.getId()).orElseThrow();
+		TicketResponse responseDto = ticketService.saveTicket(authUser1, scheduleId, seatId);
 
 		// then
+
 		assertThat(responseDto).isNotNull();
-		assertThat(responseDto.getSeat().getId()).isEqualTo(seat1.getId());
+		assertThat(responseDto.getScheduleId()).isEqualTo(scheduleId);
+		assertThat(responseDto.getSeat().getId()).isEqualTo(seatId);
 		assertThat(responseDto.getStatus()).isEqualTo(TicketStatus.RESERVED);
-		assertThat(reservedSeat.isAssigned()).isTrue();
 	}
 
 	@Test
 	@DisplayName("이미 예약된 좌석으로 티켓 생성 시 예외가 발생한다")
 	void saveTicket_whenSeatAlreadyAssigned_throwsException() {
 		// given
-		scheduleSeat1.assign(); // 미리 예약 상태로 설정
-		scheduleSeatRepository.saveAndFlush(scheduleSeat1);
+		Long scheduleId = schedule1.getId();
+		Long seatId = seat1.getId();
+
+		TicketResponse ticket = ticketService.saveTicket(authUser1, scheduleId, seatId);
+		entityManager.flush();
 		entityManager.clear();
 
-		Long alreadyReservedSeatId = scheduleSeat1.getId();
+		// when, then
+		logger.info("티켓 상태: {}", ticket.getStatus());
+
+		TicketException exception = assertThrows(TicketException.class,
+			() -> ticketService.saveTicket(authUser2, scheduleId, seatId));
+
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
+	}
+
+	@Test
+	@DisplayName("공연이 끝난 스케줄의 좌석으로 티켓 생성 시 예외가 발생한다")
+	void saveTicket_whenScheduleIsDeleted_throwsException() {
+		// given
+		Schedule deletedSchedule = createAndSaveSchedule(ScheduleStatus.DELETED);
+		Long scheduleId = deletedSchedule.getId();
+		Long seatId = seat1.getId();
+		entityManager.flush();
+		entityManager.clear();
 
 		// when, then
-		TicketException exception = assertThrows(TicketException.class,
-			() -> ticketService.saveTicket(authUser, alreadyReservedSeatId));
+		logger.info("스케줄 상태: {}", deletedSchedule.getStatus());
 
-		assertThat(exception.getMessage()).isEqualTo("올바르지 않거나 선택할 수 없는 좌석입니다.");
+		TicketException exception = assertThrows(TicketException.class,
+			() -> ticketService.saveTicket(authUser1, scheduleId, seatId));
+
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
 	}
 
 	@Test
 	@DisplayName("티켓 좌석 변경에 성공한다")
 	void updateTicket_success() {
-
 		// given
-		Ticket ticket = Ticket.saveTicket(scheduleSeat1); // 티켓생성
-		ticketRepository.save(ticket);
-
-		scheduleSeat1.assign(); // 좌석 할당
-		scheduleSeatRepository.save(scheduleSeat1);
-
-		UserTicket userTicket = new UserTicket(user, ticket);
-		userTicketRepository.save(userTicket);
-
+		TicketResponse initialTicketResponse = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		Long ticketId = initialTicketResponse.getId();
 		entityManager.flush();
 		entityManager.clear();
 
-		Long ticketId = ticket.getId();
-		Long newScheduleSeatId = scheduleSeat2.getId();
+		Long newSeatId = seat2.getId();
+		TicketChangeRequest ticketChangeRequest = new TicketChangeRequest(newSeatId);
 
-		TicketChangeRequest requestDto = new TicketChangeRequest(newScheduleSeatId); // 변경 요청 DTO 생성
+		// when
+		TicketResponse updatedResponse = ticketService.updateTicket(authUser1, ticketId, ticketChangeRequest);
+		entityManager.flush();
+		entityManager.clear();
 
-		// when, then
-		TicketResponse responseDto = ticketService.updateTicket(authUser, ticketId, requestDto);
-		assertThat(responseDto).isNotNull();
-		assertThat(responseDto.getId()).isEqualTo(ticketId);
-		assertThat(responseDto.getSeat().getId()).isEqualTo(seat2.getId()); // 좌석 변경 확인
+		// then
+		assertThat(updatedResponse).isNotNull();
+		assertThat(updatedResponse.getId()).isEqualTo(ticketId);
+		assertThat(updatedResponse.getSeat().getId()).isEqualTo(newSeatId);
 
+		// DB 확인
 		Ticket updatedTicket = ticketRepository.findById(ticketId).orElseThrow();
-		assertThat(updatedTicket.getScheduleSeat().getId()).isEqualTo(newScheduleSeatId); // 변경 된 좌석 DB 확인
+		assertThat(updatedTicket.getSeatId()).isEqualTo(newSeatId);
 
-		ScheduleSeat oldSeat = scheduleSeatRepository.findById(scheduleSeat1.getId()).orElseThrow();
-		assertThat(oldSeat.isAssigned()).isFalse(); // 기존 좌석 반환 확인
+		// 이전 좌석 예약 가능한 지 확인
+		boolean oldSeatTaken = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(schedule1.getId(), seat1.getId(),
+			List.of(TicketStatus.RESERVED));
+		assertThat(oldSeatTaken).isFalse();
 
-		ScheduleSeat newSeat = scheduleSeatRepository.findById(newScheduleSeatId).orElseThrow();
-		assertThat(newSeat.isAssigned()).isTrue(); // 새 좌석 할당 확인
+		// 현재 좌석 예약 불가능한 지 확인
+		boolean newSeatTaken = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(schedule1.getId(), newSeatId,
+			List.of(TicketStatus.RESERVED));
+		assertThat(newSeatTaken).isTrue();
 	}
 
 	@Test
 	@DisplayName("존재하지 않는 티켓으로 좌석 변경 시 예외가 발생한다")
 	void updateTicket_whenTicketNotFound_throwsException() {
 		// given
-		Long nonExistingTicketId = 1000L;
-		Long newScheduleSeatId = scheduleSeat2.getId();
-		TicketChangeRequest requestDto = new TicketChangeRequest(newScheduleSeatId);
+		Long nonExistingTicketId = 9999L;
+		TicketChangeRequest requestDto = new TicketChangeRequest(seat1.getId());
 
 		// when, then
 		TicketException exception = assertThrows(TicketException.class,
-			() -> ticketService.updateTicket(authUser, nonExistingTicketId, requestDto));
-
-		assertThat(exception.getMessage()).isEqualTo("티켓을 찾을 수 없습니다.");
+			() -> ticketService.updateTicket(authUser1, nonExistingTicketId, requestDto));
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.TICKET_NOT_FOUND);
 	}
 
 	@Test
 	@DisplayName("변경하려는 좌석이 이미 예약된 경우 예외가 발생한다")
 	void updateTicket_whenNewSeatIsAssigned_throwsException() {
 		// given
-		Ticket ticket = Ticket.saveTicket(scheduleSeat1);
-		ticketRepository.save(ticket);
+		TicketResponse ticket1Response = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		Long ticket1Id = ticket1Response.getId();
 
-		scheduleSeat1.assign();
-		scheduleSeatRepository.save(scheduleSeat1);
-
-		scheduleSeat2.assign(); // 변경 하려는 좌석도 예약 상태 설정
-		scheduleSeatRepository.save(scheduleSeat2);
-
-		UserTicket userTicket = new UserTicket(user, ticket);
-		userTicketRepository.save(userTicket);
-
+		ticketService.saveTicket(authUser2, schedule1.getId(), seat2.getId());
 		entityManager.flush();
 		entityManager.clear();
 
-		Long ticketId = ticket.getId();
-		Long assignedNewSeatId = scheduleSeat2.getId();
-		TicketChangeRequest requestDto = new TicketChangeRequest(assignedNewSeatId);
+		TicketChangeRequest ticketChangeRequest = new TicketChangeRequest(seat2.getId());
 
 		// when, then
 		TicketException exception = assertThrows(TicketException.class,
-			() -> ticketService.updateTicket(authUser, ticketId, requestDto));
+			() -> ticketService.updateTicket(authUser1, ticket1Id, ticketChangeRequest));
 
-		assertThat(exception.getMessage()).isEqualTo("올바르지 않거나 선택할 수 없는 좌석입니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.SCHEDULE_SEAT_BAD_REQUEST);
 	}
 
 	@Test
 	@DisplayName("티켓 단건 조회에 성공한다")
 	void getTicket_success() {
 		// given
-		Ticket ticket = Ticket.saveTicket(scheduleSeat1);
-		ticketRepository.save(ticket);
-
-		UserTicket userTicket = new UserTicket(user, ticket);
-		userTicketRepository.save(userTicket);
-
+		TicketResponse savedTicketDto = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		Long ticketId = savedTicketDto.getId();
+		entityManager.flush();
 		entityManager.clear();
 
-		Long ticketId = ticket.getId();
-
 		// when
-		TicketResponse responseDto = ticketService.getTicket(authUser, ticketId);
-
-		logger.info("로그1 = {}", ticket.getId());
-		logger.info("로그2 = {}", ticket.getScheduleSeat().getId());
-		logger.info("로그3 = {}", ticket.getScheduleSeat().getSeat().getPrice());
+		TicketResponse responseDto = ticketService.getTicket(authUser1, ticketId);
 
 		// then
 		assertThat(responseDto).isNotNull();
 		assertThat(responseDto.getId()).isEqualTo(ticketId);
 		assertThat(responseDto.getStatus()).isEqualTo(TicketStatus.RESERVED);
 		assertThat(responseDto.getSeat().getId()).isEqualTo(seat1.getId());
-		assertThat(responseDto.getScheduleId()).isEqualTo(schedule.getId());
+		assertThat(responseDto.getScheduleId()).isEqualTo(schedule1.getId());
 	}
 
 	@Test
 	@DisplayName("존재하지 않는 티켓 단건 조회 시 예외가 발생한다")
 	void getTicket_whenTicketNotFound_throwsException() {
 		// given
-		Long nonExistingTicketId = 1000L;
+		Long nonExistingTicketId = 9999L;
 
 		// when, then
 		TicketException exception = assertThrows(TicketException.class,
-			() -> ticketService.getTicket(authUser, nonExistingTicketId));
+			() -> ticketService.getTicket(authUser1, nonExistingTicketId));
 
-		assertThat(exception.getMessage()).isEqualTo("티켓을 찾을 수 없습니다.");
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.TICKET_NOT_FOUND);
 	}
 
 	@Test
 	@DisplayName("자신이 소유하지 않은 티켓 단건 조회 시 예외가 발생한다")
 	void getTicket_whenNotOwner_throwsException() {
 		// given
-
-		// 티켓1
-		Ticket ticket1 = Ticket.saveTicket(scheduleSeat1);
-		ticketRepository.save(ticket1);
-
-		UserTicket userTicket = new UserTicket(user, ticket1);
-		userTicketRepository.save(userTicket);
-
-		Long ticket1Id = ticket1.getId();
-
-		// 다른 유저
-		User otherUser = new User();
-		userRepository.save(otherUser);
-
-		AuthUser otherAuthUser = new AuthUser(otherUser.getId(), "다른 유저 이메일", UserRole.ROLE_USER, "다른유저");
-
+		TicketResponse user1TicketResponse = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		Long user1TicketId = user1TicketResponse.getId();
 		entityManager.flush();
 		entityManager.clear();
 
 		// when, then
 		TicketException exception = assertThrows(TicketException.class,
-			() -> ticketService.getTicket(otherAuthUser, ticket1Id));
-		assertThat(exception.getMessage()).isEqualTo("구매하신 티켓이 아닙니다.");
+			() -> ticketService.getTicket(authUser2, user1TicketId));
+		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.TICKET_ACCESS_DENIED);
 	}
 
 	@Test
-	@DisplayName("티켓 다건 조회에 성공한다")
-	void getTickets_success() {
+	@DisplayName("상태 값으로 티켓 다건 조회에 성공한다")
+	void getTickets_successWithStatusFilter() {
 		// given
-		Ticket ticket1 = Ticket.saveTicket(scheduleSeat1);
-		ticket1.cancel();
-		ticketRepository.save(ticket1);
-
-		UserTicket userTicket = new UserTicket(user, ticket1);
-		userTicketRepository.save(userTicket);
-
-		Ticket ticket2 = Ticket.saveTicket(scheduleSeat2);
-		ticketRepository.save(ticket2);
-
-		UserTicket userTicket2 = new UserTicket(user, ticket2);
-		userTicketRepository.save(userTicket2);
+		TicketResponse ticket1 = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		TicketResponse ticket2 = ticketService.saveTicket(authUser1, schedule1.getId(), seat2.getId());
+		ticketService.deleteTicket(authUser1, ticket2.getId());
+		TicketResponse ticket3 = ticketService.saveTicket(authUser1, schedule2.getId(), seat3.getId());
 
 		entityManager.flush();
 		entityManager.clear();
@@ -336,54 +295,93 @@ public class TicketServiceTest {
 		Pageable pageable = PageRequest.of(1, 10);
 
 		// when
-		Page<TicketResponse> reservedPage = ticketService.getTickets(authUser, pageable, null, "RESERVED", null, null);
-		Page<TicketResponse> canceledPage = ticketService.getTickets(authUser, pageable, null, "CANCELED", null, null);
+		Page<TicketResponse> reservedPage = ticketService.getTickets(
+			authUser1,
+			pageable,
+			null,
+			"RESERVED",
+			null,
+			null
+		);
+
+		Page<TicketResponse> canceledPage = ticketService.getTickets(
+			authUser1,
+			pageable,
+			null,
+			"CANCELED",
+			null,
+			null
+		);
 
 		// then
 		// RESERVED
 		assertThat(reservedPage).isNotNull();
-		assertThat(reservedPage.getTotalElements()).isEqualTo(1);
-		assertThat(reservedPage.getContent().size()).isEqualTo(1);
-		assertThat(reservedPage.getContent().get(0).getId()).isEqualTo(ticket2.getId());
+		assertThat(reservedPage.getTotalElements()).isEqualTo(2);
+		assertThat(reservedPage.getContent().size()).isEqualTo(2);
 		assertThat(reservedPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.RESERVED);
+
+		List<Long> reservedIds = reservedPage.getContent().stream().map(TicketResponse::getId).toList();
+		assertThat(reservedIds).containsExactlyInAnyOrder(ticket1.getId(), ticket3.getId());
 
 		// CANCELED
 		assertThat(canceledPage).isNotNull();
 		assertThat(canceledPage.getTotalElements()).isEqualTo(1);
-		assertThat(canceledPage.getContent().size()).isEqualTo(1);
-		assertThat(canceledPage.getContent().get(0).getId()).isEqualTo(ticket1.getId());
+		assertThat(canceledPage.getContent()).hasSize(1);
+		assertThat(canceledPage.getContent().get(0).getId()).isEqualTo(ticket2.getId());
 		assertThat(canceledPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.CANCELED);
+	}
+
+	@Test
+	@DisplayName("스케줄 값으로 티켓 다건 조회에 성공한다")
+	void getTickets_successWithScheduleFilter() {
+		// given
+		TicketResponse t1 = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		TicketResponse t2 = ticketService.saveTicket(authUser1, schedule1.getId(), seat2.getId());
+		TicketResponse t3 = ticketService.saveTicket(authUser1, schedule2.getId(), seat3.getId());
+
+		entityManager.flush();
+		entityManager.clear();
+
+		Pageable pageable = PageRequest.of(1, 10);
+
+		// when
+		Page<TicketResponse> schedule1Page = ticketService.getTickets(authUser1, pageable, schedule1.getId(), null,
+			null, null);
+
+		// then
+		assertThat(schedule1Page).isNotNull();
+		assertThat(schedule1Page.getTotalElements()).isEqualTo(2);
+		assertThat(schedule1Page.getContent()).hasSize(2);
+		List<Long> schedule1Ids = schedule1Page.getContent().stream().map(TicketResponse::getId).toList();
+		assertThat(schedule1Ids).containsExactlyInAnyOrder(t1.getId(), t2.getId());
 	}
 
 	@Test
 	@DisplayName("티켓 취소에 성공한다")
 	void deleteTicket_success() {
 		// given
-		Ticket ticket = Ticket.saveTicket(scheduleSeat1);
-		ticketRepository.save(ticket);
-
-		UserTicket userTicket = new UserTicket(user, ticket);
-		userTicketRepository.save(userTicket);
-
-		scheduleSeat1.assign();
-		scheduleSeatRepository.save(scheduleSeat1);
-
+		TicketResponse savedTicketDto = ticketService.saveTicket(authUser1, schedule1.getId(), seat1.getId());
+		Long ticketId = savedTicketDto.getId();
 		entityManager.flush();
 		entityManager.clear();
 
-		Long ticketId = ticket.getId();
+		logger.info("취소 전 티켓 상태: {}", savedTicketDto.getId());
 
 		// when
-		ticketService.deleteTicket(authUser, ticketId);
+		ticketService.deleteTicket(authUser1, ticketId);
 		entityManager.flush();
 		entityManager.clear();
+
+		logger.info("취소 후 티켓 상태: {}", savedTicketDto.getId());
 
 		// then
 		Ticket canceledTicket = ticketRepository.findById(ticketId).orElseThrow();
 		assertThat(canceledTicket.getStatus()).isEqualTo(TicketStatus.CANCELED);
 
-		ScheduleSeat relatedSeat = scheduleSeatRepository.findById(scheduleSeat1.getId()).orElseThrow();
-		assertThat(relatedSeat.isAssigned()).isFalse();
+		// DB 확인
+		boolean seatStillReserved = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(schedule1.getId(),
+			seat1.getId(), List.of(TicketStatus.RESERVED));
+		assertThat(seatStillReserved).isFalse();
 	}
 
 }
