@@ -20,6 +20,7 @@ import com.example.concurrencycontrolproject.domain.schedule.dto.response.UserSc
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleErrorCode;
+import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleException;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
