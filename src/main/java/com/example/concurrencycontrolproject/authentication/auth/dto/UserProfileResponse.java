@@ -9,17 +9,19 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class SignupResponse {
+public class UserProfileResponse {
 
 	private Long id;
+	private String social;
 	private String email;
 	private String nickname;
 	private String phoneNumber;
 	private String createdAt;
 
-	public static SignupResponse from(User user) {
-		return SignupResponse.builder()
+	public static UserProfileResponse from(User user) {
+		return UserProfileResponse.builder()
 			.id(user.getId())
+			.social(user.getSocial().name())
 			.email(user.getEmail())
 			.nickname(user.getNickname())
 			.phoneNumber(user.getPhoneNumber())

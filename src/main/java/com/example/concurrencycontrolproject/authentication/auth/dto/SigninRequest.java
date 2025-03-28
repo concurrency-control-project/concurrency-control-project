@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.auth.dto;
+package com.example.concurrencycontrolproject.authentication.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
