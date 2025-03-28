@@ -14,7 +14,8 @@ public enum ScheduleErrorCode implements ErrorCode {
 	SCHEDULE_NOT_FOUND("SCHEDULE_NOT_FOUND", HttpStatus.NOT_FOUND, "해당 스케줄을 찾을 수 없습니다."),
 	CANNOT_CHANGE_DELETED_STATUS("CANNOT_CHANGE_DELETED_STATUS", HttpStatus.BAD_REQUEST,
 		"DELETED 상태는 상태 수정 API를 통해 변경할 수 없습니다."),
-	DUPLICATE_SCHEDULE("DUPLICATE_SCHEDULE", HttpStatus.BAD_REQUEST, "같은 시간대의 공연 스케줄이 이미 존재합니다.");
+	DUPLICATE_SCHEDULE("DUPLICATE_SCHEDULE", HttpStatus.BAD_REQUEST, "같은 시간대의 공연 스케줄이 이미 존재합니다."),
+	SCHEDULE_OUT_OF_CONCERT_RANGE("SCHEDULE_OUT_OF_CONCERT_RANGE", HttpStatus.BAD_REQUEST, "공연 시간 외에는 스케줄을 등록할 수 없습니다.");
 
 	// status → httpStatus: @Getter가 getHttpStatus()를 자동 생성하도록 필드명 변경
 	private final String code;
