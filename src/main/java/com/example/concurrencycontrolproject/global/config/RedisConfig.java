@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.config;
+package com.example.concurrencycontrolproject.global.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
