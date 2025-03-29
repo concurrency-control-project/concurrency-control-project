@@ -3,7 +3,6 @@ package com.example.concurrencycontrolproject.domain.concert.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,13 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.concurrencycontrolproject.domain.concert.dto.request.ConcertRequest;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertDetailResponse;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertResponse;
-import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertScheduleResponse;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertSearchResponse;
-import com.example.concurrencycontrolproject.domain.concert.dto.response.SeatPriceResponse;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
 import com.example.concurrencycontrolproject.domain.concert.entity.ConcertStatus;
 import com.example.concurrencycontrolproject.domain.concert.exception.CannotDeleteConcertException;
@@ -33,18 +31,18 @@ import com.example.concurrencycontrolproject.domain.concert.exception.InvalidBoo
 import com.example.concurrencycontrolproject.domain.concert.exception.InvalidConcertPeriodException;
 import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.concert.support.ConcertTestBuilder;
+import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
+import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
+import com.example.concurrencycontrolproject.domain.schedule.service.ScheduleReader;
 
 @ExtendWith(MockitoExtension.class)
 class ConcertServiceTest {
 
 	@Mock
-	private ConcertSeatService concertSeatService;
-
-	@Mock
 	private ConcertRepository concertRepository;
 
 	@Mock
-	private ConcertScheduleService concertScheduleService;
+	private ScheduleReader scheduleReader;
 
 	@Mock
 	private ConcertReader concertReader;
@@ -210,25 +208,8 @@ class ConcertServiceTest {
 			Long concertId = 1L;
 			given(concertReader.readNotDeleted(any(Long.class))).willThrow(ConcertNotFoundException.class);
 			//when & then
-			assertThatThrownBy(() -> concertService.getConcertWithScheduleAndSeats(concertId)).isInstanceOf(
+			assertThatThrownBy(() -> concertService.getConcertWithSchedules(concertId)).isInstanceOf(
 				ConcertNotFoundException.class);
-		}
-
-		@Test
-		public void 콘서트_상세_좌석_정보_포함해서_조회_성공() {
-			//given
-			Long concertId = 1L;
-			Concert concert = defaultTestBuilder().buildConcert();
-			SeatPriceResponse seatPriceResponse = SeatPriceResponse.of("R", BigDecimal.ZERO);
-			given(concertReader.readNotDeleted(any(Long.class))).willReturn(concert);
-			given(concertScheduleService.getConcertScheduleResponses(any(Long.class))).willReturn(
-				List.of());
-			given(concertSeatService.getSeatPriceResponses(any(Long.class))).willReturn(
-				List.of(seatPriceResponse));
-			//when
-			ConcertDetailResponse result = concertService.getConcertWithScheduleAndSeats(concertId);
-			//then
-			assertThat(result.getSeatPriceResponses()).hasSize(1);
 		}
 
 		@Test
@@ -236,16 +217,27 @@ class ConcertServiceTest {
 			//given
 			Long concertId = 1L;
 			Concert concert = defaultTestBuilder().buildConcert();
-			Long concertScheduleId = 1L;
-			LocalDateTime dateTime = LocalDateTime.of(2025, 3, 26, 19, 0, 0);
-			ConcertScheduleResponse concertScheduleResponse = ConcertScheduleResponse.of(concertScheduleId, dateTime);
+			LocalDateTime scheduleDateTime = LocalDateTime.now();
+			Schedule schedule = Schedule.of(concert, scheduleDateTime, ScheduleStatus.ACTIVE);
+			ReflectionTestUtils.setField(schedule, "id", 1L);
 			given(concertReader.readNotDeleted(any(Long.class))).willReturn(concert);
-			given(concertScheduleService.getConcertScheduleResponses(any(Long.class))).willReturn(
-				List.of(concertScheduleResponse));
+			given(scheduleReader.readActiveSchedulesBy(any(Long.class))).willReturn(List.of(schedule));
 			//when
-			ConcertDetailResponse result = concertService.getConcertWithScheduleAndSeats(concertId);
+			ConcertDetailResponse result = concertService.getConcertWithSchedules(concertId);
 			//then
-			assertThat(result.getConcertScheduleResponses()).hasSize(1);
+			assertThat(result.getScheduleResponses()).hasSize(1);
+			assertThat(result.getScheduleResponses().get(0))
+				.extracting(
+					"id",
+					"concertId",
+					"dateTime",
+					"status"
+				).containsExactly(
+					1L,
+					concertId,
+					scheduleDateTime,
+					ScheduleStatus.ACTIVE
+				);
 		}
 
 		@Test
@@ -255,7 +247,7 @@ class ConcertServiceTest {
 			Concert concert = defaultTestBuilder().buildConcert();
 			given(concertReader.readNotDeleted(any(Long.class))).willReturn(concert);
 			//when
-			ConcertDetailResponse result = concertService.getConcertWithScheduleAndSeats(concertId);
+			ConcertDetailResponse result = concertService.getConcertWithSchedules(concertId);
 			//then
 			assertThat(result).extracting(
 				"id", "title", "location", "description",
