@@ -13,15 +13,16 @@ import org.springframework.util.StringUtils;
 import com.example.concurrencycontrolproject.domain.concert.dto.request.ConcertRequest;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertDetailResponse;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertResponse;
-import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertScheduleResponse;
 import com.example.concurrencycontrolproject.domain.concert.dto.response.ConcertSearchResponse;
-import com.example.concurrencycontrolproject.domain.concert.dto.response.SeatPriceResponse;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
 import com.example.concurrencycontrolproject.domain.concert.exception.CannotDeleteConcertException;
 import com.example.concurrencycontrolproject.domain.concert.exception.ConcertAlreadyExistsException;
 import com.example.concurrencycontrolproject.domain.concert.exception.InvalidBookingPeriodException;
 import com.example.concurrencycontrolproject.domain.concert.exception.InvalidConcertPeriodException;
 import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
+import com.example.concurrencycontrolproject.domain.schedule.dto.response.ScheduleResponse;
+import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
+import com.example.concurrencycontrolproject.domain.schedule.service.ScheduleReader;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,9 +32,7 @@ public class ConcertService {
 
 	private final ConcertRepository concertRepository;
 
-	private final ConcertScheduleService concertScheduleService;
-
-	private final ConcertSeatService concertSeatService;
+	private final ScheduleReader scheduleReader;
 
 	private final ConcertReader concertReader;
 
@@ -54,19 +53,22 @@ public class ConcertService {
 		return ConcertResponse.from(savedConcert);
 	}
 
+	@Transactional(readOnly = true)
 	public Page<ConcertSearchResponse> searchConcerts(String keyword, Pageable pageable) {
 		Page<Concert> concerts = concertRepository.search(keyword, pageable);
 		return concerts.map(ConcertSearchResponse::from);
 	}
 
-	public ConcertDetailResponse getConcertWithScheduleAndSeats(Long concertId) {
+	@Transactional(readOnly = true)
+	public ConcertDetailResponse getConcertWithSchedules(Long concertId) {
 
 		//TODO
 		Concert concert = concertReader.readNotDeleted(concertId);
-		List<ConcertScheduleResponse> concertScheduleResponses = concertScheduleService.getConcertScheduleResponses(
-			concert.getId());
-		List<SeatPriceResponse> seatPriceResponses = concertSeatService.getSeatPriceResponses(concertId);
-		return ConcertDetailResponse.of(concert, concertScheduleResponses, seatPriceResponses);
+		List<Schedule> schedules = scheduleReader.readActiveSchedulesBy(concert.getId());
+		List<ScheduleResponse> scheduleResponses = schedules.stream()
+			.map(schedule -> ScheduleResponse.of(schedule))
+			.toList();
+		return ConcertDetailResponse.of(concert, scheduleResponses);
 	}
 
 	@Transactional
