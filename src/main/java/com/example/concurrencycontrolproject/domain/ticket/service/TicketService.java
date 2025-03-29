@@ -11,13 +11,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.concurrencycontrolproject.domain.canceledticket.entity.CanceledTicket;
+import com.example.concurrencycontrolproject.domain.canceledticket.repository.CanceledTicketRepository;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
 import com.example.concurrencycontrolproject.domain.seat.entity.seat.Seat;
-import com.example.concurrencycontrolproject.domain.seat.repository.scheduledSeat.ScheduledSeatRepository;
 import com.example.concurrencycontrolproject.domain.seat.repository.seat.SeatRepository;
 import com.example.concurrencycontrolproject.domain.ticket.dto.request.TicketChangeRequest;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
@@ -33,7 +34,9 @@ import com.example.concurrencycontrolproject.domain.userTicket.repository.UserTi
 import com.example.concurrencycontrolproject.global.config.aop.DistributedLock;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TicketService {
@@ -41,7 +44,7 @@ public class TicketService {
 	private final TicketRepository ticketRepository;
 	private final UserRepository userRepository;
 	private final UserTicketRepository userTicketRepository;
-	private final ScheduledSeatRepository scheduledSeatRepository;
+	private final CanceledTicketRepository canceledTicketRepository;
 	private final ScheduleRepository scheduleRepository;
 	private final SeatRepository seatRepository;
 
@@ -180,8 +183,7 @@ public class TicketService {
 		// 페이지 -1
 		Pageable convertPageable = PageRequest.of(
 			pageable.getPageNumber() > 0 ? pageable.getPageNumber() - 1 : 0,
-			pageable.getPageSize(),
-			pageable.getSort()
+			pageable.getPageSize()
 		);
 
 		return ticketRepository.findTickets(authUser.getId(), convertPageable, scheduleId, ticketStatus,
@@ -193,13 +195,27 @@ public class TicketService {
 	public void deleteTicket(AuthUser authUser, Long ticketId) {
 
 		// 유저 검증
-		findUser(authUser.getId());
+		User user = findUser(authUser.getId());
 
 		// 티켓 소유 확인
 		UserTicket userTicket = findUserTicketOwner(ticketId, authUser.getId());
 
-		// 티켓 삭제 (소프트 딜리트)
-		userTicket.getTicket().cancel();
+		Ticket ticket = userTicket.getTicket();
+
+		// 이미 만료된 티켓인지 확인
+		if (ticket.getStatus() != TicketStatus.RESERVED) {
+			throw new TicketException(TicketErrorCode.TICKET_BAD_REQUEST);
+		}
+
+		// 취소티켓 테이블에 저장
+		CanceledTicket canceledTicket = CanceledTicket.canceledTicket(ticket, user);
+		canceledTicketRepository.save(canceledTicket);
+
+		// 유저 티켓 맵핑 삭제 (하드딜리트)
+		userTicketRepository.delete(userTicket);
+
+		// 티켓 삭제 (하드딜리트)
+		ticketRepository.delete(ticket);
 	}
 
 	// 티켓 좌석 변경
@@ -249,13 +265,21 @@ public class TicketService {
 
 		for (Ticket ticket : tickets) {
 
-			Schedule schedule = scheduleRepository.findById(ticket.getScheduleId())
-				.orElseThrow(
-					() -> new TicketException(TicketErrorCode.SCHEDULE_NOT_FOUND));
+			try {
+				log.info("티켓 상태 갱신 스케줄러 실행");
 
-			if (schedule.getStatus() != ScheduleStatus.ACTIVE) {
-				ticket.expire();
+				Schedule schedule = scheduleRepository.findById(ticket.getScheduleId())
+					.orElseThrow(
+						() -> new TicketException(TicketErrorCode.SCHEDULE_NOT_FOUND));
+
+				if (schedule.getStatus() != ScheduleStatus.ACTIVE) {
+					ticket.expire();
+				}
+			} catch (Exception e) {
+				log.error("티켓 상태 갱신 중 에러 발생", e);
 			}
+
 		}
 	}
+
 }
