@@ -42,7 +42,7 @@ public class ConcertController {
 
 	@GetMapping("/v1/concerts/{concertId}")
 	public Response<ConcertDetailResponse> getConcert(@PathVariable Long concertId) {
-		return Response.of(concertService.getConcertWithScheduleAndSeats(concertId));
+		return Response.of(concertService.getConcertWithSchedules(concertId));
 	}
 
 	@PutMapping("/v1/concerts/{concertId}")

@@ -14,9 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.concurrencycontrolproject.config.QueryDslConfig;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
 import com.example.concurrencycontrolproject.domain.concert.entity.ConcertStatus;
+import com.example.concurrencycontrolproject.global.config.QueryDslConfig;
 
 @DataJpaTest
 @Import(QueryDslConfig.class)
