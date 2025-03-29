@@ -14,7 +14,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableScheduling
 @EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
-// @EnableRedisRepositories(basePackages = "com.example.concurrencycontrolproject.domain.seat.entity.scheduledSeat")
 public class ConcurrencyControlProjectApplication {
 
 	public static void main(String[] args) {
