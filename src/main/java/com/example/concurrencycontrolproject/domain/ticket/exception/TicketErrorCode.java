@@ -24,6 +24,8 @@ public enum TicketErrorCode implements ErrorCode {
 		"SEAT_ID_NOT_FOUND", "시트를 찾을 수 없습니다."),
 	SCHEDULE_ID_NOT_FOUND(HttpStatus.NOT_FOUND,
 		"SCHEDULE_ID_NOT_FOUND", "스케줄 ID를 찾을 수 없습니다."),
+	TICKET_BAD_REQUEST(HttpStatus.BAD_REQUEST,
+		"TICKET_BAD_REQUEST", "처리할 수 없는 티켓입니다."),
 	SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND,
 		"SCHEDULE_NOT_FOUND", "스케줄을 찾을 수 없습니다.");
 

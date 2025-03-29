@@ -37,16 +37,4 @@ public class TicketResponse {
 			.build();
 	}
 
-	// 티켓 다건 조회
-	public static TicketResponse ticketPageResponse(Ticket ticket) {
-		return TicketResponse.builder()
-			.id(ticket.getId())
-			.status(ticket.getStatus())
-			.createdAt(ticket.getCreatedAt())
-			.modifiedAt(ticket.getModifiedAt())
-			.scheduleId(ticket.getScheduleId())
-			.seat(null)
-			.build();
-	}
-
 }
