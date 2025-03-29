@@ -31,38 +31,6 @@ public class TicketTest {
 	}
 
 	@Test
-	@DisplayName("RESERVED 상태의 티켓을 취소할 수 있다")
-	void cancelTicket_whenStatusIsReserve() {
-		// given
-		Ticket ticket = Ticket.builder()
-			.scheduleId(1L)
-			.seatId(10L)
-			.status(TicketStatus.RESERVED)
-			.build();
-
-		// when
-		ticket.cancel();
-
-		// then
-		assertThat(ticket.getStatus()).isEqualTo(TicketStatus.CANCELED);
-	}
-
-	@Test
-	@DisplayName("RESERVED 상태가 아닌 티켓은 취소할 수 없다")
-	void cancelTicket_whenStatusIsNotReserved() {
-		// given
-		Ticket ticket = Ticket.builder()
-			.scheduleId(1L)
-			.seatId(10L)
-			.status(TicketStatus.CANCELED)
-			.build();
-
-		// when, then
-		TicketException exception = assertThrows(TicketException.class, ticket::cancel);
-		assertThat(exception.getErrorCode()).isEqualTo(TicketErrorCode.TICKET_UPDATE_INVALID_STATUS);
-	}
-
-	@Test
 	@DisplayName("RESERVED 상태의 티켓을 만료시킬 수 있다")
 	void expireTicket_whenStatusIsReserved() {
 		// given
@@ -83,11 +51,6 @@ public class TicketTest {
 	@DisplayName("RESERVED 상태가 아닌 티켓은 만료시켜도 상태가 변하지 않는다")
 	void expireTicket_whenStatusIsNotReserved() {
 		// given
-		Ticket canceledTicket = Ticket.builder()
-			.scheduleId(1L)
-			.seatId(10L)
-			.status(TicketStatus.CANCELED)
-			.build();
 		Ticket expiredTicket = Ticket.builder()
 			.scheduleId(1L)
 			.seatId(11L)
@@ -95,11 +58,9 @@ public class TicketTest {
 			.build();
 
 		// when
-		canceledTicket.expire();
 		expiredTicket.expire();
 
 		// then
-		assertThat(canceledTicket.getStatus()).isEqualTo(TicketStatus.CANCELED);
 		assertThat(expiredTicket.getStatus()).isEqualTo(TicketStatus.EXPIRED);
 	}
 

@@ -108,7 +108,7 @@ public class TicketRepositoryTest {
 		entityManager.persist(ut2);
 
 		ticket3 = Ticket.saveTicket(schedule2.getId(), seat1.getId());
-		ticket3.cancel();
+		ticket3.expire();
 		entityManager.persist(ticket3);
 		UserTicket ut3 = new UserTicket(user2, ticket3);
 		entityManager.persist(ut3);
@@ -246,7 +246,7 @@ public class TicketRepositoryTest {
 			user2.getId(),
 			pageable,
 			null,
-			"CANCELED",
+			"EXPIRED",
 			null,
 			null
 		);
@@ -258,7 +258,7 @@ public class TicketRepositoryTest {
 		assertThat(resultPage.getTotalElements()).isEqualTo(1);
 		assertThat(resultPage.getContent().size()).isEqualTo(1);
 		assertThat(resultPage.getContent().get(0).getId()).isEqualTo(ticket3.getId());
-		assertThat(resultPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.CANCELED);
+		assertThat(resultPage.getContent().get(0).getStatus()).isEqualTo(TicketStatus.EXPIRED);
 	}
 
 	@Test
