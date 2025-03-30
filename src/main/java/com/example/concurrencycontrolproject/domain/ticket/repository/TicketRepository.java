@@ -9,7 +9,7 @@ import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long>, TicketRepositoryCustom {
 
-	List<Ticket> findTicketsByStatus(TicketStatus status);
+	List<Ticket> findTicketsByScheduleIdAndStatus(Long scheduleId, TicketStatus status);
 
 	// 예약 가능 상태 검증
 	boolean existsByScheduleIdAndSeatIdAndStatusIn(Long scheduleId, Long seatId, List<TicketStatus> statuses);
