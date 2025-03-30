@@ -16,6 +16,8 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,7 +51,6 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 		// 락 획득 시도 => tryLock
 		// Redis 에서 락 객체(RLock) 호출
 		RLock lock = redissonClient.getLock(lockKey);
-		log.info("락 획득 시도: {}", lockKey);
 
 		// 디버깅용 타임아웃 값 계산
 		long waitMillis = distributedLock.timeUnit().toMillis(distributedLock.waitTime());
@@ -58,16 +59,19 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 		log.info("[Thread-{}] 락 획득 시도: Key='{}', WaitTime={}ms, LeaseTime={}ms",
 			Thread.currentThread().getId(), lockKey, waitMillis, leaseMillis); // 스레드 ID 및 타임아웃 로깅
 
+		boolean lockAcquired = false; // 락 획득 여부
+		boolean synchronizationRegistered = false; // 트랜잭션 동기화 등록 여부
+
 		try {
 			// @DistributedLock 에서 설정한 시간 관련 값
-			boolean isLocked = lock.tryLock(distributedLock.waitTime(), distributedLock.leaseTime(),
+			lockAcquired = lock.tryLock(distributedLock.waitTime(), distributedLock.leaseTime(),
 				distributedLock.timeUnit());
 
 			log.info("[Thread-{}] 락 획득 결과: {}, Key='{}'",
-				Thread.currentThread().getId(), isLocked, lockKey); // 락 획득 결과 로깅
+				Thread.currentThread().getId(), lockAcquired, lockKey); // 락 획득 결과 로깅
 
 			// 락 획득 실패 시 처리
-			if (!isLocked) {
+			if (!lockAcquired) {
 				log.warn("[Thread-{}] 락 획득 실패 (타임아웃): Key='{}'",
 					Thread.currentThread().getId(), lockKey);
 				// 정해진 시간(waitTime) 동안 락을 얻지 못함 -> 예외 발생시켜 메서드 실행 중단
@@ -75,31 +79,85 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 			}
 
 			// 락 획득 성공 시 처리
-			log.info("[Thread-{}] 락 획득 성공: Key='{}'", Thread.currentThread().getId(), lockKey);
+			log.info("[Thread-{}] 락 획득 성공: Key='{}'",
+				Thread.currentThread().getId(), lockKey);
+
+			// 트랜잭션 동기화 시작
+			if (TransactionSynchronizationManager.isActualTransactionActive()) {
+				log.info("[Thread-{}] 트랜잭션이 시작, 완료 후 락 해제 됨: Key='{}'",
+					Thread.currentThread().getId(), lockKey);
+
+				TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+
+					@Override
+					public void afterCompletion(int status) {
+
+						// 트랜잭션 완료 후 실행
+						if (lock.isHeldByCurrentThread()) {
+							try {
+								lock.unlock();
+								log.info("[Thread-{}] 트랜잭션 완료({}), 락 해제 성공: Key='{}'",
+									Thread.currentThread().getId(),
+									status == STATUS_COMMITTED ? "COMMIT" : "ROLLBACK/UNKNOWN", // 상태 로깅
+									lockKey);
+
+							} catch (Exception e) {
+
+								// unlock 중에 발생할 수 있는 예외 처리
+								log.error("[Thread-{}] 트랜잭션 완료 후 락 해제 중 오류 발생: Key='{}'",
+									Thread.currentThread().getId(), lockKey, e);
+							}
+						} else {
+
+							// 락 점유 시간 만료로 현재 스레드가 락을 보유하고 있지 않은 경우
+							log.warn("[Thread-{}] 트랜잭션 완료 후 락 해제 시도 중, 락을 보유하고 있지 않음: Key='{}'",
+								Thread.currentThread().getId(), lockKey);
+						}
+					}
+				});
+
+				synchronizationRegistered = true; // 동기화 등록 표시
+
+			} else {
+				log.info("[Thread-{}] 활성 트랜잭션 없음. 메서드 종료 시 finally 에서 락 해제 됨: Key='{}'",
+					Thread.currentThread().getId(), lockKey);
+			}
+
 			// AOP 가 적용된 원래 메서드 실행 => 이 메서드의 반환값이 applyLock 메서드의 최종 반환값이 됨
 			return joinPoint.proceed();
 
 			// 락 획득 대기 중에 스레드가 중단(interrupt)될 경우의 처리
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
-			log.error("[Thread-{}] 락 획득 중 인터럽트 발생: Key='{}'", Thread.currentThread().getId(), lockKey, e);
-			throw new RuntimeException("락 획득 중단", e);
-		} finally {
-			// 작업 완료 후 최종적으로 락 해제 (락 반환) => finally 블록으로 오류가 발생하든, 성공하든 무조건 락 해제
+			log.error("[Thread-{}] 락 획득 중 인터럽트 발생: Key='{}'",
+				Thread.currentThread().getId(), lockKey, e);
 
-			if (lock.isLocked() && lock.isHeldByCurrentThread()) {
-				// lock.isHeldByCurrentThread(): 현재 이 코드를 실행하는 스레드가 실제로 락을 점유하고 있는지 확인 => 락이 없는데 unlock 호출하는 것 방지
-				try {
-					lock.unlock();
-					log.info("[Thread-{}] 락 해제 성공: Key='{}'", Thread.currentThread().getId(), lockKey);
-				} catch (IllegalMonitorStateException e) {
-					// 이미 다른 스레드나 이유로 락이 해제된 경우 발생할 수 있음
-					log.error("[Thread-{}] 락 해제 시도 중 오류 발생: Key='{}'", Thread.currentThread().getId(),
-						lockKey, e);
+			throw new RuntimeException("락 획득 중단", e);
+
+		} finally {
+			// 작업 완료 후 최종적으로 락 해제 (락 반환)
+			// => finally 블록으로 오류가 발생하든, 성공하든 무조건 락 해제
+			// + 추가로 락을 획득했고, 트랜잭션 동기화가 등록되지 않은 경우에만 락 해제 하도록 수정
+			// => 트랜잭션 없는 메서드는 여기서 락 해제됨
+
+			if (lockAcquired && !synchronizationRegistered) {
+				if (lock.isHeldByCurrentThread()) {
+					// lock.isHeldByCurrentThread(): 현재 이 코드를 실행하는 스레드가 실제로 락을 점유하고 있는지 확인 => 락이 없는데 unlock 호출하는 것 방지
+					try {
+						lock.unlock();
+						log.info("[Thread-{}] 트랜잭션이 아닌 메서드 완료 후, finally 에서 락 해제 성공: Key='{}'",
+							Thread.currentThread().getId(), lockKey);
+					} catch (Exception e) {
+						// 이미 다른 스레드나 이유로 락이 해제된 경우 발생할 수 있음
+						log.error("[Thread-{}] 트랜잭션이 아닌 메서드 완료 후, finally 에서 락 해제 시도 중 오류 발생: Key='{}'",
+							Thread.currentThread().getId(), lockKey, e);
+					}
+
+				} else {
+					// finally 시점에 현재 스레드가 락을 보유하고 있지 않은 경우
+					log.warn("[Thread-{}] 트랜잭션이 아닌 메서드 완료 후, finally 에서 락 해제 시도 중, 락을 보유하고 있지 않음. Key='{}'",
+						Thread.currentThread().getId(), lockKey);
 				}
-			} else {
-				// 락을 점유하고 있지 않은 경우 (tryLock 실패 후 finally 진입)
-				log.info("[Thread-{}] 락을 점유하고 있지 않아 해제 건너뜀: Key='{}'", Thread.currentThread().getId(), lockKey);
 			}
 		}
 	}

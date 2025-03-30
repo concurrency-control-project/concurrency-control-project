@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "tickets",
 	uniqueConstraints = {
 		@UniqueConstraint(name = "UK_ticket_schedule_seat", columnNames = {"schedule_id", "seat_id"})
-	}) // 순차적 락 획득 + 검증/커밋 타이밍 문제 때문에 유니크 설정 해줘야됨
+	}) // 순차적 락 획득 + 검증/커밋 타이밍 문제 때문에 유니크 설정 해줘야됨 => 트랜잭션 동기화로 인해 더 이상 안해도 되지만 명시적으로 해놓음.
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
