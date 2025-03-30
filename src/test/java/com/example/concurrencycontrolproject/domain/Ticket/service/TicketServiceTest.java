@@ -429,7 +429,7 @@ public class TicketServiceTest {
 		assertThat(responseDto.getStatus()).isEqualTo(TicketStatus.RESERVED);
 
 		// DB 확인
-		// 원래 티켓은 여전히 존재 X
+		// 원래 티켓은 존재 안함
 		assertThat(ticketRepository.findById(originalTicketId)).isEmpty();
 
 		// 새로 생성된 티켓이 존재하고 RESERVED 상태
@@ -438,7 +438,7 @@ public class TicketServiceTest {
 		assertThat(newTicket.getScheduleId()).isEqualTo(scheduleId);
 		assertThat(newTicket.getSeatId()).isEqualTo(seatId);
 
-		// 해당 좌석은 이제 새 티켓으로 인해 예약된 상태
+		// 해당 좌석은 이제 새 티켓으로 예약된 상태
 		boolean seatIsNowReserved = ticketRepository.existsByScheduleIdAndSeatIdAndStatusIn(scheduleId,
 			seatId, List.of(TicketStatus.RESERVED));
 		assertThat(seatIsNowReserved).isTrue();
