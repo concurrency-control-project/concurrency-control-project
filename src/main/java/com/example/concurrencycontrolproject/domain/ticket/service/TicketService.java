@@ -7,14 +7,12 @@ import java.util.Objects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.concurrencycontrolproject.domain.canceledticket.entity.CanceledTicket;
 import com.example.concurrencycontrolproject.domain.canceledticket.repository.CanceledTicketRepository;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
-import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
 import com.example.concurrencycontrolproject.domain.schedule.enums.ScheduleStatus;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
 import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
@@ -256,29 +254,11 @@ public class TicketService {
 		return TicketResponse.ticketDetailedResponse(ticket, seatResponseDto);
 	}
 
-	// 티켓을 만료시키는 스케줄링 메서드
-	// Todo: 성능 생각하면 굳이 스케줄링으로 하지 말고, 스케줄의 상태 변경 시에 티켓도 전부 변경하는 게 좋아 보입니다.
-	@Transactional
-	@Scheduled(cron = "0 * * * * *")
-	public void expireTicket() {
-		List<Ticket> tickets = ticketRepository.findTicketsByStatus(TicketStatus.RESERVED);
-
+	// 티켓을 만료시키는 메서드 (스케줄 서비스에서 스케줄 삭제 때 호출됨)
+	public void expireTicket(Long scheduleId) {
+		List<Ticket> tickets = ticketRepository.findTicketsByScheduleIdAndStatus(scheduleId, TicketStatus.RESERVED);
 		for (Ticket ticket : tickets) {
-
-			try {
-				log.info("티켓 상태 갱신 스케줄러 실행");
-
-				Schedule schedule = scheduleRepository.findById(ticket.getScheduleId())
-					.orElseThrow(
-						() -> new TicketException(TicketErrorCode.SCHEDULE_NOT_FOUND));
-
-				if (schedule.getStatus() != ScheduleStatus.ACTIVE) {
-					ticket.expire();
-				}
-			} catch (Exception e) {
-				log.error("티켓 상태 갱신 중 에러 발생", e);
-			}
-
+			ticket.expire();
 		}
 	}
 

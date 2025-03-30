@@ -25,6 +25,7 @@ import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleE
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleException;
 import com.example.concurrencycontrolproject.domain.schedule.exception.ScheduleOutOfConcertRangeException;
 import com.example.concurrencycontrolproject.domain.schedule.repository.ScheduleRepository;
+import com.example.concurrencycontrolproject.domain.ticket.service.TicketService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +35,8 @@ public class ScheduleService {
 
 	private final ConcertRepository concertRepository;
 	private final ScheduleRepository scheduleRepository;
+
+	private final TicketService ticketService; // 티켓만료 때문에 추가했습니다.
 
 	// 공연 스케줄 생성
 	@Transactional
@@ -128,6 +131,8 @@ public class ScheduleService {
 
 		Schedule schedule = findScheduleByConcertIdAndId(concertId, scheduleId);
 		schedule.deletedAt();
+
+		ticketService.expireTicket(scheduleId); // 티켓 만료 메서드
 	}
 
 	// 검증 로직
