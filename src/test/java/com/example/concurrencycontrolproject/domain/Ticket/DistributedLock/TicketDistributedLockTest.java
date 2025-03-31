@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.example.concurrencycontrolproject.domain.Ticket.service.TicketServiceTest;
 import com.example.concurrencycontrolproject.domain.common.auth.AuthUser;
@@ -67,6 +69,9 @@ public class TicketDistributedLockTest {
 	@Autowired
 	private ConcertRepository concertRepository;
 
+	@Autowired
+	private StringRedisTemplate redisTemplate;
+
 	Logger logger = LoggerFactory.getLogger(TicketServiceTest.class);
 
 	private Seat seat1;
@@ -105,6 +110,12 @@ public class TicketDistributedLockTest {
 			userRepository.save(newUser);
 			authUsers.add(
 				new AuthUser(newUser.getId(), "user" + i + "@email.com", UserRole.ROLE_USER, "분산락 테스트 authUsers " + i));
+		}
+
+		Set<String> lockKeys = redisTemplate.keys("scheduleIdSeatId:*");
+		if (lockKeys != null && !lockKeys.isEmpty()) {
+			redisTemplate.delete(lockKeys);
+			logger.info("Deleted existing lock keys before test: {}", lockKeys);
 		}
 
 		// entityManager.flush(); // @Transactional 없어서 오류 발생

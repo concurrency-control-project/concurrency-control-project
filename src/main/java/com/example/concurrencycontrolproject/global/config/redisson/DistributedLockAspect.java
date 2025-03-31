@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.global.config.aop;
+package com.example.concurrencycontrolproject.global.config.redisson;
 
 import java.lang.reflect.Method;
 
@@ -36,7 +36,9 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 
 	// @DistributedLock 붙은 메서드를 실행 전후에 개입
 	@Around("@annotation(distributedLock)")
-	public Object applyLock(ProceedingJoinPoint joinPoint, DistributedLock distributedLock) throws Throwable {
+	public Object applyLock(ProceedingJoinPoint joinPoint,
+		DistributedLock distributedLock) throws Throwable {
+
 		MethodSignature signature = (MethodSignature)joinPoint.getSignature();
 		Method method = signature.getMethod();
 		Object[] args = joinPoint.getArgs();
@@ -84,9 +86,10 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 
 			// 트랜잭션 동기화 시작
 			if (TransactionSynchronizationManager.isActualTransactionActive()) {
-				log.info("[Thread-{}] 트랜잭션이 시작, 완료 후 락 해제 됨: Key='{}'",
+				log.info("[Thread-{}] 트랜잭션이 시작, 완료 후 락 해제 될 예정: Key='{}'",
 					Thread.currentThread().getId(), lockKey);
 
+				// 트랜잭션 완료 시 실행될 콜백 등록
 				TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
 
 					@Override
@@ -103,7 +106,7 @@ public class DistributedLockAspect { // @DistributedLock 어노테이션이 붙�
 
 							} catch (Exception e) {
 
-								// unlock 중에 발생할 수 있는 예외 처리
+								// unlock 중에 발생할 수 있는 예외 처리 로깅
 								log.error("[Thread-{}] 트랜잭션 완료 후 락 해제 중 오류 발생: Key='{}'",
 									Thread.currentThread().getId(), lockKey, e);
 							}
