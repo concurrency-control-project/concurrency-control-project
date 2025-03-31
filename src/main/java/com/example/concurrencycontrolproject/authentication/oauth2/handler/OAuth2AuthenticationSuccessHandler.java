@@ -1,6 +1,8 @@
 package com.example.concurrencycontrolproject.authentication.oauth2.handler;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -10,6 +12,7 @@ import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshT
 import com.example.concurrencycontrolproject.authentication.jwt.util.JwtUtil;
 import com.example.concurrencycontrolproject.authentication.oauth2.dto.OAuthUser;
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +27,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenService refreshService;
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public void onAuthenticationSuccess(
@@ -54,6 +58,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		jwtUtil.accessTokenSetHeader(accessToken, response);
 		jwtUtil.refreshTokenSetCookie(refreshToken, response);
+
 		response.setStatus(HttpServletResponse.SC_OK);
+
+		Map<String, String> tokenResponse = new HashMap<>();
+		tokenResponse.put("accessToken", accessToken);
+		tokenResponse.put("refreshToken", refreshToken);
+
+		response.getWriter().write(
+			objectMapper.writeValueAsString(tokenResponse)
+		);
 	}
 }
