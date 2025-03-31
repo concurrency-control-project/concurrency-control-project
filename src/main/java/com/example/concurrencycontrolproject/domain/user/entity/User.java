@@ -42,10 +42,11 @@ public class User extends TimeStamped {
 	}
 
 	@Builder
-	public User(String email, String nickname, UserRole role) {
+	public User(String email, String nickname, UserRole role, SocialType social) {
 		this.email = email;
 		this.nickname = nickname;
 		this.role = role;
+		this.social = social;
 	}
 
 	public User(String email, String password, String nickname, String phoneNumber) {
@@ -76,6 +77,10 @@ public class User extends TimeStamped {
 
 	public void updatePassword(String password) {
 		this.password = password;
+	}
+
+	public void updateGuestUser() {
+		this.role = UserRole.ROLE_USER;
 	}
 
 	public void cancelUser() {

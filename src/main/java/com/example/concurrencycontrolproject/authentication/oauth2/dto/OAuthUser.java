@@ -7,20 +7,22 @@ import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 
 import lombok.Getter;
 
 @Getter
-public class OAuthUser {
+public class OAuthUser implements OAuth2User {
 
-	private final Long id;
-	private final String email;
-	private final Collection<? extends GrantedAuthority> authorities;
-	private final String nickname;
-	private final String providerId;
-	private final String providerType;
+	private Long id;
+	private String email;
+	private Collection<? extends GrantedAuthority> authorities;
+	private String nickname;
+	private String providerId;
+	private String providerType;
+	private Map<String, Object> attributes;
 
 	public OAuthUser(Long id, String email, UserRole userRole, String nickname, String providerId,
 		String providerType) {
@@ -30,6 +32,11 @@ public class OAuthUser {
 		this.nickname = nickname;
 		this.providerId = providerId;
 		this.providerType = providerType;
+	}
+
+	public OAuthUser(List<SimpleGrantedAuthority> simpleGrantedAuthorities, Map<String, Object> attributes) {
+		this.authorities = simpleGrantedAuthorities;
+		this.attributes = attributes;
 	}
 
 	public Map<String, Object> getAttributes() {
@@ -49,5 +56,10 @@ public class OAuthUser {
 			return UserRole.valueOf(roleString);
 		}
 		return UserRole.ROLE_GUEST;
+	}
+
+	@Override
+	public String getName() {
+		return (String)attributes.get("providerId");
 	}
 }

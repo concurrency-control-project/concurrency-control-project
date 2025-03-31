@@ -10,6 +10,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
@@ -39,6 +42,11 @@ public class SecurityConfig {
 	}
 
 	@Bean
+	public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+		return new HttpSessionOAuth2AuthorizationRequestRepository();
+	}
+
+	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
 		OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2Service) throws Exception {
 		return http
@@ -61,6 +69,9 @@ public class SecurityConfig {
 				.anyRequest().authenticated())
 
 			.oauth2Login(oauth2 -> oauth2
+				.authorizationEndpoint(endpoint -> endpoint
+					.authorizationRequestRepository(authorizationRequestRepository())
+				)
 				.userInfoEndpoint(userInfo -> userInfo
 					.userService(oauth2Service))
 				.successHandler(oAuth2AuthenticationSuccessHandler)
