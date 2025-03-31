@@ -12,7 +12,8 @@ enum AuthErrorCode implements ErrorCode {
 	UNSUPPORTED_TOKEN(HttpStatus.UNAUTHORIZED, "UNSUPPORTED_TOKEN", "지원하지 않는 JWT 토큰입니다."),
 	AUTHENTICATION_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_EXPIRED", "로그인 시간이 만료되었습니다. 다시 로그인 해주세요."),
 	UNSUPPORTED_PROVIDER(HttpStatus.BAD_REQUEST, "UNSUPPORTED_PROVIDER", "지원하지 않는 소셜 서비스 입니다."),
-	DUPLICATE_SOCIAL_EMAIL(HttpStatus.BAD_REQUEST, "DUPLICATE_SOCIAL_EMAIL", "해당 소셜 사이트로 이미 가입한 이메일 입니다.");
+	DUPLICATE_SOCIAL_EMAIL(HttpStatus.BAD_REQUEST, "DUPLICATE_SOCIAL_EMAIL", "해당 소셜 사이트로 이미 가입한 이메일 입니다."),
+	ONLY_GUEST_USER(HttpStatus.BAD_REQUEST, "ONLY_GUEST_USER", "GUEST 유저가 아닙니다. 정상 접근 해주세요.");
 
 	private final HttpStatus status;
 	private final String code;
