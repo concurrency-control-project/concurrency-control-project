@@ -17,8 +17,7 @@ public class NaverOAuthUserInfo extends OAuthUserInfo {
 
 	@Override
 	public String getEmail() {
-		Object email = getResponse().get("email");
-		return new StringBuilder(email.toString()).append("@naver.com").toString();
+		return (String)getResponse().get("email");
 	}
 
 	@Override
