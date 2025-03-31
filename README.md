@@ -76,7 +76,8 @@
 <br><br><br>
 
 ## 👩 ERD
-![image](https://github.com/user-attachments/assets/b414e5c2-f521-4d14-aa08-6a234258657e)
+![{E6BA2424-B8DF-4570-9329-1838ABF1F76C}](https://github.com/user-attachments/assets/f9bdf616-b990-42fd-b90a-9125e8ce104d)
+
 
 <br><br><br>
 
