@@ -1,4 +1,4 @@
-package com.example.concurrencycontrolproject.global.config.aop;
+package com.example.concurrencycontrolproject.global.config.redisson;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

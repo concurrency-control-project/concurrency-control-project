@@ -29,7 +29,7 @@ import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.repository.UserRepository;
 import com.example.concurrencycontrolproject.domain.userTicket.entity.UserTicket;
 import com.example.concurrencycontrolproject.domain.userTicket.repository.UserTicketRepository;
-import com.example.concurrencycontrolproject.global.config.aop.DistributedLock;
+import com.example.concurrencycontrolproject.global.config.redisson.DistributedLock;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,6 +125,7 @@ public class TicketService {
 	// 티켓 생성
 	@Transactional
 	@DistributedLock(keyPrefix = "scheduleIdSeatId", keySuffixExpression = "#scheduleId + '-' + #seatId")
+	// @LettuceDistributedLock(keyPrefix = "scheduleIdSeatId", keySuffixExpression = "#scheduleId + '-' + #seatId")
 	public TicketResponse saveTicket(AuthUser authUser, Long scheduleId, Long seatId) {
 
 		// 유저 검증
