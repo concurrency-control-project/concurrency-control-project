@@ -1,6 +1,5 @@
 package com.example.concurrencycontrolproject.authentication.auth.controller;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +11,6 @@ import com.example.concurrencycontrolproject.authentication.auth.dto.SignupReque
 import com.example.concurrencycontrolproject.authentication.auth.dto.SignupResponse;
 import com.example.concurrencycontrolproject.authentication.auth.dto.UserProfileResponse;
 import com.example.concurrencycontrolproject.authentication.auth.service.AuthService;
-import com.example.concurrencycontrolproject.authentication.oauth2.dto.OAuthUser;
 import com.example.concurrencycontrolproject.domain.common.response.Response;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,9 +40,8 @@ public class AuthController {
 
 	// 첫 소셜 로그인 유저 -> 추가 정보 입력
 	@PostMapping("/v1/auth/privacy-consent")
-	public Response<UserProfileResponse> agreeToPrivacyPolicy(@AuthenticationPrincipal OAuthUser oAuthUser,
-		@Valid @RequestBody AdditionalInfoRequest addInfo) {
-		UserProfileResponse userProfile = authService.addUserInfo(oAuthUser, addInfo);
+	public Response<UserProfileResponse> agreeToPrivacyPolicy(@Valid @RequestBody AdditionalInfoRequest addInfo) {
+		UserProfileResponse userProfile = authService.addUserInfo(addInfo);
 		return Response.of(userProfile);
 	}
 }

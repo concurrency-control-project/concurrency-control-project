@@ -21,7 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.example.concurrencycontrolproject.authentication.auth.dto.AdditionalInfoRequest;
 import com.example.concurrencycontrolproject.authentication.auth.dto.SignupResponse;
 import com.example.concurrencycontrolproject.authentication.auth.dto.UserProfileResponse;
-import com.example.concurrencycontrolproject.authentication.exception.DuplicateSocialEmailException;
+import com.example.concurrencycontrolproject.authentication.exception.OnlyGuestUserException;
 import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshTokenService;
 import com.example.concurrencycontrolproject.authentication.jwt.util.JwtUtil;
 import com.example.concurrencycontrolproject.authentication.oauth2.dto.OAuthUser;
@@ -55,7 +55,7 @@ class AuthServiceTest {
 	User user;
 	User oauthUser;
 	Long userId = 1L;
-	String email = "email@email.com";
+	String email = "email@naver.com";
 	String password = "Password!123456";
 	String nickname = "nickname";
 	String phoneNumber = "010-0000-0000";
@@ -70,10 +70,11 @@ class AuthServiceTest {
 		ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 		ReflectionTestUtils.setField(user, "modifiedAt", LocalDateTime.now());
 
-		oauthUser = new User();
+		oauthUser = new User(email, encodedPassword, nickname, phoneNumber);
 		ReflectionTestUtils.setField(oauthUser, "id", userId);
 		ReflectionTestUtils.setField(oauthUser, "createdAt", LocalDateTime.now());
 		ReflectionTestUtils.setField(oauthUser, "modifiedAt", LocalDateTime.now());
+		ReflectionTestUtils.setField(oauthUser, "role", UserRole.ROLE_GUEST);
 	}
 
 	@Test
@@ -135,17 +136,19 @@ class AuthServiceTest {
 
 	@Test
 	void addUserInfo() {
-		OAuthUser oauth = new OAuthUser(null, "email@naver.com", UserRole.ROLE_GUEST, "naver user", "naverId",
+		OAuthUser oauth = new OAuthUser(null, email, UserRole.ROLE_GUEST, "naver user", "naverId",
 			"naver");
 
 		ReflectionTestUtils.setField(oauthUser, "social", SocialType.NAVER);
 		ReflectionTestUtils.setField(oauthUser, "nickname", oauth.getNickname());
 
+		given(request.getEmail()).willReturn(email);
 		given(request.getPassword()).willReturn(password);
 		given(request.getPhoneNumber()).willReturn(phoneNumber);
-		given(userRepository.save(any())).willReturn(oauthUser);
 
-		UserProfileResponse response = authService.addUserInfo(oauth, request);
+		given(userRepository.findByEmail(anyString())).willReturn(Optional.of(oauthUser));
+
+		UserProfileResponse response = authService.addUserInfo(request);
 
 		assertThat(response).isNotNull();
 		assertThat(response.getSocial()).isEqualTo(SocialType.NAVER.name());
@@ -153,18 +156,21 @@ class AuthServiceTest {
 	}
 
 	@Test
-	void addUserInfo_동일한_소셜_이메일() {
-		OAuthUser oauth = new OAuthUser(null, "email@naver.com", UserRole.ROLE_GUEST, "naver user", "naverId",
+	void addUserInfo_GUEST_USER가_아닌_경우() {
+		OAuthUser oauth = new OAuthUser(null, email, UserRole.ROLE_USER, "naver user", "naverId",
 			"naver");
-		SocialType socialType = SocialType.NAVER;
 
-		ReflectionTestUtils.setField(oauthUser, "social", socialType);
+		ReflectionTestUtils.setField(oauthUser, "social", SocialType.NAVER);
 		ReflectionTestUtils.setField(oauthUser, "nickname", oauth.getNickname());
 
-		given(userRepository.existsByEmailAndSocial(oauth.getEmail(), socialType)).willReturn(true);
+		given(request.getEmail()).willReturn(email);
+		given(request.getPassword()).willReturn(password);
+		given(request.getPhoneNumber()).willReturn(phoneNumber);
 
-		assertThrows(DuplicateSocialEmailException.class, () -> {
-			authService.addUserInfo(oauth, request);
+		given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+
+		assertThrows(OnlyGuestUserException.class, () -> {
+			authService.addUserInfo(request);
 		});
 	}
 }

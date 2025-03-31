@@ -6,17 +6,18 @@ import java.util.Optional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.concurrencycontrolproject.authentication.auth.dto.AdditionalInfoRequest;
 import com.example.concurrencycontrolproject.authentication.auth.dto.SignupResponse;
 import com.example.concurrencycontrolproject.authentication.auth.dto.UserProfileResponse;
-import com.example.concurrencycontrolproject.authentication.exception.DuplicateSocialEmailException;
+import com.example.concurrencycontrolproject.authentication.exception.OnlyGuestUserException;
 import com.example.concurrencycontrolproject.authentication.exception.UnsupportedProviderException;
 import com.example.concurrencycontrolproject.authentication.jwt.service.RefreshTokenService;
 import com.example.concurrencycontrolproject.authentication.jwt.util.JwtUtil;
-import com.example.concurrencycontrolproject.authentication.oauth2.dto.OAuthUser;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.user.enums.SocialType;
+import com.example.concurrencycontrolproject.domain.user.enums.UserRole;
 import com.example.concurrencycontrolproject.domain.user.exception.AlreadyExistsEmailException;
 import com.example.concurrencycontrolproject.domain.user.exception.EmailAccessDeniedException;
 import com.example.concurrencycontrolproject.domain.user.exception.EmailNotFoundException;
@@ -62,21 +63,23 @@ public class AuthService {
 		createAndSaveJwt(user, servletResponse);
 	}
 
-	public UserProfileResponse addUserInfo(OAuthUser oAuthUser, AdditionalInfoRequest request) {
-		String email = oAuthUser.getEmail();
-		String nickname = oAuthUser.getNickname();
-		SocialType social = getSocialType(oAuthUser.getProviderType());
+	@Transactional
+	public UserProfileResponse addUserInfo(AdditionalInfoRequest request) {
+		String email = request.getEmail();
 		String password = request.getPassword();
 		String phoneNumber = request.getPhoneNumber();
 
-		if (userRepository.existsByEmailAndSocial(email, social)) {
-			throw new DuplicateSocialEmailException();
+		User guestUser = userRepository.findByEmail(email).orElseThrow(EmailNotFoundException::new);
+		if (guestUser.getRole() != UserRole.ROLE_GUEST) {
+			throw new OnlyGuestUserException();
 		}
 
 		String encodedPassword = bCryptPasswordEncoder.encode(password);
-		User user = new User(email, encodedPassword, nickname, phoneNumber, social);
-		User saveUser = userRepository.save(user);
+		guestUser.updatePassword(encodedPassword);
+		guestUser.updatePhoneNumber(phoneNumber);
+		guestUser.updateGuestUser();
 
+		User saveUser = userRepository.findByEmail(guestUser.getEmail()).orElseThrow(EmailNotFoundException::new);
 		return UserProfileResponse.from(saveUser);
 	}
 
