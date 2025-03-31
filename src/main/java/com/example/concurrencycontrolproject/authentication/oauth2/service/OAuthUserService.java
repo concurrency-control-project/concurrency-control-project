@@ -9,7 +9,6 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -53,10 +52,9 @@ public class OAuthUserService implements OAuth2UserService<OAuth2UserRequest, OA
 		OAuth2Attributes extractAttributes = OAuth2Attributes.of(socialType, userNameAttributeName, attributes);
 		OAuthUser oAuthUser = processOAuthUser(extractAttributes, socialType);
 
-		return new DefaultOAuth2User(
+		return new OAuthUser(
 			Collections.singletonList(new SimpleGrantedAuthority(oAuthUser.getRole().name())),
-			attributes,
-			extractAttributes.getNameAttributeKey()
+			attributes
 		);
 	}
 
@@ -77,11 +75,9 @@ public class OAuthUserService implements OAuth2UserService<OAuth2UserRequest, OA
 				.email(oauthUserInfo.getEmail())
 				.nickname(oauthUserInfo.getNickname())
 				.role(UserRole.ROLE_GUEST)
+				.social(socialType)
 				.build();
 
-			//FIXME: userRepository.save()를 다시 확인해보자.
-			//		 AuthService의 addUserInfo에서 새로 User를 생성해 save하고 있다.
-			//		 만약 여기서 save하지 못할 경우, 진행이 안 된다면 save유지 -> 진행할 수 있으면 addUserInfo 변경
 			return userRepository.save(newUser);
 		});
 

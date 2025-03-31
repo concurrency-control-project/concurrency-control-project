@@ -15,7 +15,7 @@ public class GithubOAuthUserInfo extends OAuthUserInfo {
 
 	@Override
 	public String getEmail() {
-		return (String)attributes.get("email");
+		return (String)attributes.get("login") + "@github.com";
 	}
 
 	@Override
