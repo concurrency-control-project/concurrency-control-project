@@ -18,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.concurrencycontrolproject.config.QueryDslConfig;
 import com.example.concurrencycontrolproject.domain.concert.entity.Concert;
 import com.example.concurrencycontrolproject.domain.concert.repository.ConcertRepository;
 import com.example.concurrencycontrolproject.domain.schedule.entity.Schedule;
@@ -30,6 +29,7 @@ import com.example.concurrencycontrolproject.domain.ticket.entity.TicketStatus;
 import com.example.concurrencycontrolproject.domain.ticket.repository.TicketRepository;
 import com.example.concurrencycontrolproject.domain.user.entity.User;
 import com.example.concurrencycontrolproject.domain.userTicket.entity.UserTicket;
+import com.example.concurrencycontrolproject.global.config.QueryDslConfig;
 
 import jakarta.persistence.EntityManager;
 
