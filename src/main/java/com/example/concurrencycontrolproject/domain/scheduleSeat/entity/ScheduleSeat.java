@@ -12,8 +12,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Entity
 public class ScheduleSeat extends TimeStamped {
 
@@ -39,4 +41,12 @@ public class ScheduleSeat extends TimeStamped {
 		this.isAssigned = false;
 	}
 
+	// 시연용
+	public static ScheduleSeat create(Schedule schedule, Seat seat) {
+		ScheduleSeat scheduleSeat = new ScheduleSeat();
+		scheduleSeat.schedule = schedule;
+		scheduleSeat.seat = seat;
+		scheduleSeat.isAssigned = false;
+		return scheduleSeat;
+	}
 }

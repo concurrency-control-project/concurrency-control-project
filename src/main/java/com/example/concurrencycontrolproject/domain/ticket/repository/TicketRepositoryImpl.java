@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import com.example.concurrencycontrolproject.domain.seat.dto.Seat.SeatResponse;
+import com.example.concurrencycontrolproject.domain.seat.dto.response.SeatResponseDto;
 import com.example.concurrencycontrolproject.domain.ticket.dto.response.TicketResponse;
 import com.example.concurrencycontrolproject.domain.ticket.entity.QTicket;
 import com.example.concurrencycontrolproject.domain.user.entity.QUser;
@@ -38,18 +39,18 @@ public class TicketRepositoryImpl implements TicketRepositoryCustom {
 
 		List<TicketResponse> list = queryFactory
 			.select(Projections.constructor(TicketResponse.class,
-					ticket.id,
-					ticket.scheduleSeat.schedule.id,
-					ticket.status,
-					ticket.createdAt,
-					ticket.modifiedAt,
-					Projections.constructor(SeatResponse.class,
-						ticket.scheduleSeat.seat.id,
-						ticket.scheduleSeat.seat.number,
-						ticket.scheduleSeat.seat.grade,
-						ticket.scheduleSeat.seat.price,
-						ticket.scheduleSeat.seat.section
-					)
+				ticket.id,
+				ticket.scheduleSeat.schedule.id,
+				ticket.status,
+				ticket.createdAt,
+				ticket.modifiedAt,
+				Projections.constructor(SeatResponseDto.class,  // 시연용
+					ticket.scheduleSeat.seat.id,
+					ticket.scheduleSeat.seat.number,
+					ticket.scheduleSeat.seat.grade,
+					ticket.scheduleSeat.seat.price,
+					ticket.scheduleSeat.seat.section
+				)
 				)
 			)
 			.from(ticket)

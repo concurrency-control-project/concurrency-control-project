@@ -46,6 +46,16 @@ public class ScheduledSeatController {
 		Response<ScheduledSeatResponse> response = scheduledSeatService.getReservation(scheduleId, seatId);
 		return ResponseEntity.ok(response);
 	}
+
+	// [시연용] DB에 ScheduleSeat 직접 저장 (락 X / Redis X)
+	@PostMapping("/v1/scheduled-seats/init")
+	public ResponseEntity<Response<ScheduledSeatResponse>> initScheduleSeat(@RequestBody ScheduledSeatRequest requestDTO) {
+		ScheduledSeatResponse response = scheduledSeatService.saveScheduleSeatInDB(
+			requestDTO.getScheduleId(),
+			requestDTO.getSeatId()
+		);
+		return ResponseEntity.ok(Response.of(response));
+	}
 }
 
 
